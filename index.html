@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>質感彩色列印行事曆</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+    
+    <style>
+        /* 全域現代簡約風格 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f8f9fa;
+            color: #333333;
+            margin: 24px;
+        }
+
+        /* 頂部控制面板（網頁版視覺優化） */
+        .no-print-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .form-box {
+            min-width: 260px;
+            flex: 1;
+        }
+
+        .form-box h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 16px;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 6px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #6c757d;
+            margin-bottom: 6px;
+        }
+
+        input[type="text"], input[type="date"], select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            background: #ffffff;
+            box-sizing: border-box;
+            font-size: 14px;
+            color: #495057;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus, input[type="date"]:focus, select:focus {
+            outline: none;
+            border-color: #74c0fc;
+        }
+
+        .time-range {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button {
+            background-color: #4dadf7;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 5px;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #339af0;
+        }
+        
+        .btn-print {
+            background-color: #37b24d;
+        }
+        .btn-print:hover {
+            background-color: #2b8a3e;
+        }
+        .btn-danger {
+            background-color: #ffffff;
+            color: #fa5252;
+            border: 1px solid #fa5252;
+        }
+        .btn-danger:hover {
+            background-color: #fff5f5;
+        }
+
+        /* 日曆區塊 */
+        #calendar-container {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        /* 假日溫柔櫻花粉背景 */
+        .holiday-bg {
+            background-color: #fff0f2 !important; 
+        }
+
+        /* FullCalendar 彩色事件樣式優化 */
+        .fc {
+            max-width: 100%;
+            font-size: 14px;
+        }
+        
+        /* 課程風格（天空藍） */
+        .event-course {
+            background-color: #e7f5ff !important;
+            color: #1c7ed6 !important;
+            border-left: 4px solid #339af0 !important;
+            border-top: none !important; border-right: none !important; border-bottom: none !important;
+            padding: 4px 6px !important;
+            font-weight: 500;
+        }
+        
+        /* 活動風格（薄荷綠） */
+        .event-activity {
+            background-color: #ebfbee !important;
+            color: #2b8a3e !important;
+            border-left: 4px solid #40c057 !important;
+            border-top: none !important; border-right: none !important; border-bottom: none !important;
+            padding: 4px 6px !important;
+            font-weight: 500;
+        }
+
+        .fc-timegrid-slot {
+            height: 40px !important; /* 適合閱讀與寫字的寬度 */
+        }
+
+        /* ================= 關鍵：彩色列印專用設定 ================= */
+        @media print {
+            html, body {
+                background: #ffffff;
+                margin: 0;
+                padding: 0;
+                /* 強制瀏覽器印出所有背景顏色（關鍵） */
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            .no-print-area, .fc-header-toolbar {
+                display: none !important; /* 隱藏控制按鈕 */
+            }
+
+            #calendar-container {
+                box-shadow: none;
+                padding: 0;
+            }
+
+            .fc-event {
+                /* 確保列印時邊框與色彩不被瀏覽器優化掉 */
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print-area">
+        
+        <div class="form-box">
+            <h3>➕ 新增行程活動</h3>
+            <div class="form-group">
+                <label>行程類別</label>
+                <select id="eventType" onchange="toggleTypeFields()">
+                    <option value="course">📚 課程 (固定科目)</option>
+                    <option value="activity">🏃 活動 (自訂內容)</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="courseGroup">
+                <label>選擇課程</label>
+                <select id="courseSelect">
+                    <option value="國文">國文</option>
+                    <option value="英文">英文</option>
+                    <option value="數學">數學</option>
+                    <option value="社會">社會</option>
+                    <option value="自然">自然</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="activityGroup" style="display: none;">
+                <label>活動名稱</label>
+                <input type="text" id="activityInput" placeholder="例如：寫作業、休息、吃晚餐">
+            </div>
+
+            <div class="form-group">
+                <label>日期</label>
+                <input type="date" id="eventDate">
+            </div>
+
+            <div class="form-group">
+                <label>時間範圍 (半小時單位)</label>
+                <div class="time-range">
+                    <select id="startTime"></select>
+                    <span>至</span>
+                    <select id="endTime"></select>
+                </div>
+            </div>
+            
+            <button onclick="submitNewEvent()">排入行事曆</button>
+        </div>
+
+        <div class="form-box">
+            <h3>📅 假日框設定 (粉色)</h3>
+            <div class="form-group">
+                <label>選擇指定日期</label>
+                <input type="date" id="holidayDate" onchange="checkHolidayStatus()">
+            </div>
+            <div class="form-group" style="margin-top: 18px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px;">
+                    <input type="checkbox" id="isHolidayCheckbox" onchange="toggleHolidayDatabase()" style="transform: scale(1.2);"> 
+                    將此日期設為「假日」
+                </label>
+            </div>
+            <p style="font-size: 12px; color: #868e96; line-height: 1.5; margin-top: 20px;">
+                * 系統預設六、日為粉紅假日。<br>
+                * 平日若放假可自行勾選；補班日可取消勾選。
+            </p>
+        </div>
+
+        <div class="form-box" style="max-width: 220px;">
+            <h3>🖨️ 系統功能</h3>
+            <button class="btn-print" onclick="window.print()" style="padding: 12px; margin-bottom: 15px;">🖨️ 列印彩色行事曆</button>
+            <button class="btn-danger" onclick="clearAllData()">⚠️ 清空所有資料</button>
+        </div>
+
+    </div>
+
+    <div id="calendar-container">
+        <div id="calendar"></div>
+    </div>
+
+    <script>
+        let calendar;
+        const EVENTS_KEY = 'cram_calendar_events_color';
+        const HOLIDAYS_KEY = 'cram_calendar_holidays_color';
+
+        let holidayOverrides = JSON.parse(localStorage.getItem(HOLIDAYS_KEY)) || {};
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            document.getElementById('eventDate').value = todayStr;
+            document.getElementById('holidayDate').value = todayStr;
+
+            populateTimeSelects();
+            
+            const savedEvents = JSON.parse(localStorage.getItem(EVENTS_KEY)) || [];
+
+            const calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridWeek',
+                locale: 'zh-tw',
+                slotDuration: '00:30:00',
+                slotMinTime: '07:30:00',
+                slotMaxTime: '22:00:00',
+                allDaySlot: false,
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'timeGridWeek,dayGridMonth'
+                },
+                events: savedEvents,
+                datesSet: function() {
+                    applyHolidayStyles();
+                },
+                eventClick: function(info) {
+                    if (confirm(`是否要刪除「${info.event.title}」？`)) {
+                        info.event.remove();
+                        saveEventsToStorage();
+                    }
+                }
+            });
+
+            calendar.render();
+            checkHolidayStatus();
+        });
+
+        function populateTimeSelects() {
+            const startSel = document.getElementById('startTime');
+            const endSel = document.getElementById('endTime');
+            for (let h = 0; h < 24; h++) {
+                for (let m = 0; m < 60; m += 30) {
+                    const hh = String(h).padStart(2, '0');
+                    const mm = String(m).padStart(2, '0');
+                    const timeStr = `${hh}:${mm}`;
+                    startSel.options.add(new Option(timeStr, timeStr));
+                    endSel.options.add(new Option(timeStr, timeStr));
+                }
+            }
+            startSel.value = "14:00";
+            endSel.value = "15:30";
+        }
+
+        function toggleTypeFields() {
+            const type = document.getElementById('eventType').value;
+            document.getElementById('courseGroup').style.display = (type === 'course') ? 'block' : 'none';
+            document.getElementById('activityGroup').style.display = (type === 'activity') ? 'block' : 'none';
+        }
+
+        function isDateHoliday(dateStr) {
+            if (holidayOverrides[dateStr] !== undefined) {
+                return holidayOverrides[dateStr];
+            }
+            const parts = dateStr.split('-');
+            const dayObj = new Date(parts[0], parts[1] - 1, parts[2]);
+            const dayOfWeek = dayObj.getDay();
+            return (dayOfWeek === 0 || dayOfWeek === 6);
+        }
+
+        function checkHolidayStatus() {
+            const dateStr = document.getElementById('holidayDate').value;
+            if (!dateStr) return;
+            document.getElementById('isHolidayCheckbox').checked = isDateHoliday(dateStr);
+        }
+
+        function toggleHolidayDatabase() {
+            const dateStr = document.getElementById('holidayDate').value;
+            if (!dateStr) return;
+            
+            const isChecked = document.getElementById('isHolidayCheckbox').checked;
+            const parts = dateStr.split('-');
+            const dayObj = new Date(parts[0], parts[1] - 1, parts[2]);
+            const isDefaultHoliday = (dayObj.getDay() === 0 || dayObj.getDay() === 6);
+
+            if (isChecked === isDefaultHoliday) {
+                delete holidayOverrides[dateStr];
+            } else {
+                holidayOverrides[dateStr] = isChecked;
+            }
+
+            localStorage.setItem(HOLIDAYS_KEY, JSON.stringify(holidayOverrides));
+            applyHolidayStyles();
+        }
+
+        function applyHolidayStyles() {
+            document.querySelectorAll('[data-date]').forEach(el => {
+                const dateStr = el.getAttribute('data-date');
+                if (!dateStr) return;
+
+                if (isDateHoliday(dateStr)) {
+                    el.classList.add('holiday-bg');
+                } else {
+                    el.classList.remove('holiday-bg');
+                }
+            });
+        }
+
+        function submitNewEvent() {
+            const type = document.getElementById('eventType').value;
+            const dateStr = document.getElementById('eventDate').value;
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+
+            if (!dateStr || startTime >= endTime) {
+                alert("請檢查日期或時間範圍是否正確！");
+                return;
+            }
+
+            let title = "";
+            let className = "";
+
+            if (type === 'course') {
+                title = `📚 ${document.getElementById('courseSelect').value}`;
+                className = 'event-course'; // 帶入藍色樣式
+            } else {
+                const actName = document.getElementById('activityInput').value.trim();
+                if (!actName) {
+                    alert("請輸入活動名稱！");
+                    return;
+                }
+                title = `🏃 ${actName}`;
+                className = 'event-activity'; // 帶入綠色樣式
+            }
+
+            const eventData = {
+                title: title,
+                start: `${dateStr}T${startTime}:00`,
+                end: `${dateStr}T${endTime}:00`,
+                className: className // 儲存自訂顏色樣式
+            };
+
+            calendar.addEvent(eventData);
+            saveEventsToStorage();
+            document.getElementById('activityInput').value = "";
+        }
+
+        function saveEventsToStorage() {
+            const events = calendar.getEvents().map(evt => ({
+                title: evt.title,
+                start: evt.startStr,
+                end: evt.endStr,
+                className: evt.classNames[0] // 把顏色類別一併存下來
+            }));
+            localStorage.setItem(EVENTS_KEY, JSON.stringify(events));
+        }
+
+        function clearAllData() {
+            if (confirm("確定要清空所有行程與假日設定嗎？")) {
+                localStorage.removeItem(EVENTS_KEY);
+                localStorage.removeItem(HOLIDAYS_KEY);
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
