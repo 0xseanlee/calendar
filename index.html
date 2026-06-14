@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大格子互動月曆排程器 - 清楚大字自動換行版</title>
+    <title>大格子互動月曆排程器 - 字體可調極簡無空格版</title>
     
+    <!-- 引入 FullCalendar 6 -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
     
+    <!-- 網頁轉 PDF 的外掛 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
@@ -39,6 +41,26 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.04);
         }
         .top-bar h2 { margin: 0; font-size: 18px; color: #333; }
+        .top-bar-controls { display: flex; align-items: center; gap: 20px; }
+        
+        /* 滑桿控制樣式 */
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #495057;
+            background: #f8f9fa;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+        .slider-group input[type="range"] {
+            cursor: pointer;
+            width: 120px;
+        }
+
         .top-bar-btns { display: flex; gap: 10px; }
         
         button {
@@ -59,9 +81,10 @@
         #calendar-container {
             flex: 1;
             background: #ffffff;
-            padding: 15px;
+            padding: 20px;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            box-sizing: border-box;
         }
 
         .fc { height: 100% !important; background: #ffffff !important; }
@@ -82,22 +105,23 @@
             z-index: 5;
         }
 
-        /* 允許格子根據內容自由伸縮，確保字體放大後能看清楚 */
+        /* 允許日曆表格具備穩定的基礎伸縮度 */
         .fc .fc-daygrid-body, .fc .fc-scrollgrid-sync-table {
-            height: auto !important;
+            height: 100% !important;
         }
         .fc .fc-daygrid-day-frame {
-            min-height: 100px !important;
+            min-height: 110px !important;
             height: 100% !important;
             cursor: pointer;
             display: flex;
             flex-direction: column;
+            box-sizing: border-box;
         }
         .fc .fc-daygrid-day-frame:hover {
             background-color: #f8f9fa;
         }
 
-        /* 日期數字大小 */
+        /* 日期數字 */
         .fc-daygrid-day-top {
             display: flex;
             justify-content: flex-end;
@@ -111,18 +135,41 @@
             background-color: #fff0f2 !important; 
         }
 
-        /* ✨ 核心大改動：放大字體、100% 自動換行 */
+        /* 🔒 堅持單行不換行＋超緊湊文字排列（字體大小改由 CSS 變數控制） */
         .fc-event {
-            margin: 2px 4px !important;
-            padding: 4px 6px !important;
-            font-size: 13px !important; /* 🔍 字體放大，看得更清楚 */
+            margin: 1px 4px !important;
+            padding: 2px 4px !important;
+            font-size: var(--event-font-size, 13px) !important; /* ✨ 綁定動態字體變數 */
             border-radius: 4px !important;
-            font-weight: 600 !important; /* 🔍 加粗字體方便辨識 */
+            font-weight: 600 !important;
             border: none !important;
-            white-space: normal !important; /* 🔍 100% 自動換行，絕不切字 */
-            word-break: break-all !important;
-            line-height: 1.4 !important;
-            height: auto !important; /* 高度隨文字長度自動延伸 */
+            height: auto !important;
+            min-height: 18px !important;
+            white-space: nowrap !important;     
+            overflow: hidden !important;        
+            text-overflow: ellipsis !important; 
+        }
+
+        .fc-daygrid-event-harness {
+            position: relative !important;
+            visibility: visible !important;
+            height: auto !important;            
+        }
+
+        .fc-event-main-frame {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .fc-event-main,
+        .fc-event-title,
+        .fc-event-time {
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            font-size: inherit !important; /* 確保內部容器與父層字體一致 */
         }
         
         .clr-blue { background-color: #e7f5ff !important; color: #1c7ed6 !important; border-left: 4px solid #339af0 !important; }
@@ -167,18 +214,31 @@
 </head>
 <body>
 
+    <!-- 頂部功能條 -->
     <div class="top-bar">
         <h2>我的大格子行事曆</h2>
-        <div class="top-bar-btns">
-            <button class="btn-print" onclick="downloadPDF()">📥 下載完美單頁 PDF</button>
-            <button class="btn-danger" onclick="clearAllData()">⚠️ 清空所有紀錄</button>
+        
+        <div class="top-bar-controls">
+            <!-- ✨ 全新功能：字體大小調整槓桿 -->
+            <div class="slider-group">
+                <label for="fontSizeSlider">🔎 字體大小:</label>
+                <input type="range" id="fontSizeSlider" min="10" max="20" value="13" oninput="updateFontSize(this.value)">
+                <span id="fontSizeVal">13px</span>
+            </div>
+            
+            <div class="top-bar-btns">
+                <button class="btn-print" onclick="downloadPDF()">📥 下載完美單頁 PDF</button>
+                <button class="btn-danger" onclick="clearAllData()">⚠️ 清空所有紀錄</button>
+            </div>
         </div>
     </div>
 
+    <!-- 大日曆主體 -->
     <div id="calendar-container">
         <div id="calendar"></div>
     </div>
 
+    <!-- 點擊格子彈出視窗 -->
     <div class="modal-overlay" id="eventModal">
         <div class="modal-box">
             <h3 id="modalTitle">📅 管理行程</h3>
@@ -195,7 +255,7 @@
             <div class="modal-group">
                 <label>行程類別</label>
                 <select id="modalEventType" onchange="toggleModalFields()">
-                    <option value="course">📚 課程 (固定科目)</option>
+                    <option value="course">📚 課程 (縮寫一字化)</option>
                     <option value="activity">🏃 活動 (自訂內容)</option>
                 </select>
             </div>
@@ -203,14 +263,14 @@
             <div class="modal-group" id="modalCourseGroup">
                 <label>選擇科目</label>
                 <select id="modalCourseSelect">
-                    <option value="國文">國文</option>
-                    <option value="英文">英文</option>
-                    <option value="數學">數學</option>
-                    <option value="社會">社會</option>
-                    <option value="自然">自然</option>
-                    <option value="鋼琴">🎹 鋼琴</option>
-                    <option value="物理">⚛️ 物理</option>
-                    <option value="化學">🧪 化學</option>
+                    <option value="國">國文</option>
+                    <option value="英">英文</option>
+                    <option value="數">數學</option>
+                    <option value="社">社會</option>
+                    <option value="自">自然</option>
+                    <option value="琴">🎹 鋼琴</option>
+                    <option value="物">⚛️ 物理</option>
+                    <option value="化">🧪 化學</option>
                 </select>
             </div>
 
@@ -220,17 +280,17 @@
             </div>
 
             <div class="modal-group">
-                <label>行程對象 (備註)</label>
+                <label>行程對象</label>
                 <select id="modalUserSelect" onchange="toggleCustomUserField()">
                     <option value="Sean">👦 Sean</option>
                     <option value="Vivi">👧 Vivi</option>
-                    <option value="其他">✍️ 其他 (自訂內容)</option>
+                    <option value="其他">✍️ 其他 (自訂)</option>
                 </select>
             </div>
 
             <div class="modal-group" id="customUserGroup" style="display: none;">
                 <label>輸入自訂對象/備註</label>
-                <input type="text" id="modalCustomUserInput" placeholder="例如：線上課、全家">
+                <input type="text" id="modalCustomUserInput" placeholder="例如：全家">
             </div>
 
             <div class="modal-group">
@@ -270,7 +330,16 @@
 
         let holidayOverrides = JSON.parse(localStorage.getItem(HOLIDAYS_KEY)) || {};
 
+        // ✨ 控制字體大小的 JavaScript 函數
+        function updateFontSize(val) {
+            document.documentElement.style.setProperty('--event-font-size', val + 'px');
+            document.getElementById('fontSizeVal').innerText = val + 'px';
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
+            // 初始化字體大小變數
+            updateFontSize(document.getElementById('fontSizeSlider').value);
+            
             populateModalTimeSelects();
             const savedEvents = JSON.parse(localStorage.getItem(EVENTS_KEY)) || [];
 
@@ -279,14 +348,14 @@
                 initialView: 'dayGridMonth', 
                 locale: 'zh-tw',
                 editable: false,
-                dayMaxEvents: false, // 完整顯示，不隱藏
+                dayMaxEvents: false, 
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
                     right: '' 
                 },
                 displayEventEnd: true, 
-                eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+                eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false, meridian: false },
                 events: savedEvents,
                 
                 dateClick: function(info) { openModalForCreate(info.dateStr); },
@@ -300,7 +369,7 @@
             calendar.render();
         });
 
-        // ✨ 智慧 PDF 輸出：不管日曆被行程撐到多高，都能完美等比例壓進單頁 A4 橫式中！
+        // 固定比例的虛擬獨立大畫布，徹底解決截圖跑掉的問題
         async function downloadPDF() {
             const { jsPDF } = window.jspdf;
             const element = document.getElementById('calendar-container');
@@ -317,60 +386,41 @@
             if(todayBtn) todayBtn.style.visibility = 'hidden';
 
             try {
-                // 暫時將寬度固定在適合清晰輸出的高解析度外觀
                 const originalStyle = element.style.cssText;
-                element.style.width = '1200px';
-                calendar.updateSize(); 
+                element.style.width = '1450px';
+                element.style.height = '900px';
+                calendar.updateSize();
 
-                await new Promise(resolve => setTimeout(resolve, 300));
+                await document.fonts.ready;
+                await new Promise(resolve => setTimeout(resolve, 600));
 
-                // 擷取整個行事曆的實際渲染畫面（高度會隨多個行程自動拉長）
                 const canvas = await html2canvas(element, {
                     scale: 2, 
                     useCORS: true,
                     backgroundColor: '#ffffff',
-                    logging: false
+                    logging: false,
+                    removeContainer: true
                 });
 
-                // 還原網頁原本的樣式
                 element.style.cssText = originalStyle;
                 calendar.updateSize();
                 if(prevBtn) prevBtn.style.visibility = 'visible';
                 if(nextBtn) nextBtn.style.visibility = 'visible';
                 if(todayBtn) todayBtn.style.visibility = 'visible';
 
-                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                const imgData = canvas.toDataURL('image/jpeg', 0.98);
                 
-                // 建立標準橫式 A4 PDF (297mm x 210mm)
                 const pdf = new jsPDF({
                     orientation: 'landscape',
                     unit: 'mm',
                     format: 'a4'
                 });
 
-                const pdfWidth = 297;
-                const pdfHeight = 210;
-                const margin = 6;
-                const printableWidth = pdfWidth - (margin * 2); // 285 mm
-                const printableHeight = pdfHeight - (margin * 2); // 198 mm
+                const margin = 5;
+                const printW = 297 - (margin * 2); 
+                const printH = 210 - (margin * 2); 
 
-                // 核心關鍵：根據畫布的「實際寬高比例」自動縮放
-                const canvasRatio = canvas.height / canvas.width;
-                
-                let printW = printableWidth;
-                let printH = printableWidth * canvasRatio;
-
-                // 如果算出來的高度超過了 A4 可列印高度，改以高度為基準等比例縮小寬度
-                if (printH > printableHeight) {
-                    printH = printableHeight;
-                    printW = printableHeight / canvasRatio;
-                }
-
-                // 置中對齊貼上圖片
-                const xOffset = margin + (printableWidth - printW) / 2;
-                const yOffset = margin + (printableHeight - printH) / 2;
-
-                pdf.addImage(imgData, 'JPEG', xOffset, yOffset, printW, printH);
+                pdf.addImage(imgData, 'JPEG', margin, margin, printW, printH);
                 
                 const monthTitle = document.querySelector('.fc-toolbar-title').innerText || '行事曆';
                 pdf.save(`${monthTitle}_排班表.pdf`);
@@ -408,7 +458,7 @@
             document.getElementById('modalHolidayCheckbox').checked = isDateHoliday(dateStr);
             
             document.getElementById('modalEventType').value = "course";
-            document.getElementById('modalCourseSelect').value = "國文";
+            document.getElementById('modalCourseSelect').value = "國";
             document.getElementById('modalActivityInput').value = "";
             document.getElementById('modalUserSelect').value = "Sean";
             document.getElementById('modalCustomUserInput').value = "";
@@ -435,21 +485,18 @@
             document.getElementById('modalDivider').style.display = 'none';
 
             let fullTitle = calEvent.title;
-            let type = fullTitle.startsWith('📚') ? 'course' : 'activity';
-            document.getElementById('modalEventType').value = type;
+            const isCourse = ["國","英","數","社","自","琴","物","化"].some(c => fullTitle.startsWith(c));
+            document.getElementById('modalEventType').value = isCourse ? 'course' : 'activity';
 
             let memo = "Sean";
-            const memoMatch = fullTitle.match(/\(([^)]+)\)$/);
-            if (memoMatch) {
-                memo = memoMatch[1];
-                fullTitle = fullTitle.replace(` (${memo})`, '');
+            if (fullTitle.includes('-')) {
+                const parts = fullTitle.split('-');
+                memo = parts[parts.length - 1];
+                fullTitle = fullTitle.substring(0, fullTitle.lastIndexOf('-'));
             }
-            
-            fullTitle = fullTitle.replace('📚 ', '').replace('🏃 ', '');
 
-            if (type === 'course') {
-                const courseSelect = document.getElementById('modalCourseSelect');
-                courseSelect.value = Array.from(courseSelect.options).some(opt => opt.value === fullTitle) ? fullTitle : "國文";
+            if (isCourse) {
+                document.getElementById('modalCourseSelect').value = fullTitle;
             } else {
                 document.getElementById('modalActivityInput').value = fullTitle;
             }
@@ -523,18 +570,19 @@
             let memo = userSelectVal;
             if (userSelectVal === '其他') {
                 memo = document.getElementById('modalCustomUserInput').value.trim();
-                if (!memo) memo = '其他';
+                if (!memo) memo = '他';
             }
             if (startTime >= endTime) { alert("結束時間必須晚於開始時間！"); return; }
             
             let title = "";
-            if (type === 'course') { title = `📚 ${document.getElementById('modalCourseSelect').value}`; } 
-            else {
-                const actName = document.getElementById('modalActivityInput').value.trim();
+            if (type === 'course') { 
+                title = document.getElementById('modalCourseSelect').value; 
+            } else {
+                const actName = document.getElementById('modalActivityInput').value.trim().replace(/\s+/g, '');
                 if (!actName) { alert("請輸入活動名稱！"); return; }
-                title = `🏃 ${actName}`;
+                title = actName;
             }
-            title += ` (${memo})`;
+            title += `-${memo}`;
 
             const eventData = {
                 title: title,
