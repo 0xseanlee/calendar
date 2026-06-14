@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大格子互動月曆排程器 - 標題絕對置中版</title>
+    <title>大格子互動月曆排程器 - 高容量不變形版</title>
     
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
     
@@ -59,7 +59,7 @@
         #calendar-container {
             flex: 1;
             background: #ffffff;
-            padding: 20px;
+            padding: 15px;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.06);
             overflow: hidden; 
@@ -67,15 +67,14 @@
 
         .fc { height: 100% !important; background: #ffffff !important; }
         
-        /* ================= ✨ 標題絕對置中核心 CSS ================= */
+        /* 標題絕對置中 */
         .fc-header-toolbar {
-            position: relative; /* 建立定位基準 */
+            position: relative;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            margin-bottom: 1em !important;
         }
-
-        /* 強迫中間的項目（也就是月份標題）絕對置中，完全無視左右按鈕的寬度 */
         .fc-header-toolbar .fc-toolbar-chunk:nth-child(2) {
             position: absolute !important;
             left: 50% !important;
@@ -83,23 +82,35 @@
             text-align: center;
             z-index: 5;
         }
-        /* ========================================================= */
 
-        .fc .fc-daygrid-day-frame {
-            min-height: 110px !important;
+        /* 🔒 核心修改：死死固定每一格的高度，絕對不允許被撐開 */
+        .fc .fc-daygrid-body, .fc .fc-scrollgrid-sync-table {
             height: 100% !important;
+        }
+        .fc .fc-daygrid-day {
+            height: 85px !important; /* 精準控制格子高度 */
+        }
+        .fc .fc-daygrid-day-frame {
+            height: 100% !important;
+            min-height: 0 !important;
+            max-height: 100% !important;
+            overflow: hidden !important; /* 限制多出來的內容不把格子撐大 */
             cursor: pointer;
+            display: flex;
+            flex-direction: column;
         }
         .fc .fc-daygrid-day-frame:hover {
             background-color: #f8f9fa;
         }
 
+        /* 縮小日期的數字大小與上下的間距，挪出更多空間給行程 */
         .fc-daygrid-day-top {
             display: flex;
             justify-content: flex-end;
-            padding: 6px 8px;
-            font-size: 15px;
+            padding: 2px 6px !important;
+            font-size: 13px !important;
             font-weight: 600;
+            line-height: 1 !important;
         }
 
         /* 溫柔櫻花粉假日背景 */
@@ -107,23 +118,26 @@
             background-color: #fff0f2 !important; 
         }
 
-        /* 自訂色彩行程方塊 */
+        /* 🔒 核心修改：精細縮小行程方塊，使其能安全塞入更多課堂 */
         .fc-event {
-            margin: 2px 4px !important;
-            padding: 4px 6px !important;
-            font-size: 12px !important;
-            border-radius: 4px !important;
+            margin: 1px 3px !important;
+            padding: 1px 4px !important;
+            font-size: 11px !important; /* 微調字體，確保一行能容納更多資訊 */
+            border-radius: 3px !important;
             font-weight: 500;
             border: none !important;
-            white-space: normal !important; 
-            line-height: 1.4 !important;
+            white-space: nowrap !important; /* 防止換行吃掉垂直空間 */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3 !important;
+            height: 16px !important; /* 固定單個行程高度 */
         }
         
-        .clr-blue { background-color: #e7f5ff !important; color: #1c7ed6 !important; border-left: 4px solid #339af0 !important; }
-        .clr-green { background-color: #ebfbee !important; color: #2b8a3e !important; border-left: 4px solid #40c057 !important; }
-        .clr-pink { background-color: #fff0f2 !important; color: #c2255c !important; border-left: 4px solid #f783ac !important; }
-        .clr-orange { background-color: #fff4e6 !important; color: #d9480f !important; border-left: 4px solid #ffa94d !important; }
-        .clr-purple { background-color: #f3f0ff !important; color: #6741d9 !important; border-left: 4px solid #9775fa !important; }
+        .clr-blue { background-color: #e7f5ff !important; color: #1c7ed6 !important; border-left: 3px solid #339af0 !important; }
+        .clr-green { background-color: #ebfbee !important; color: #2b8a3e !important; border-left: 3px solid #40c057 !important; }
+        .clr-pink { background-color: #fff0f2 !important; color: #c2255c !important; border-left: 3px solid #f783ac !important; }
+        .clr-orange { background-color: #fff4e6 !important; color: #d9480f !important; border-left: 3px solid #ffa94d !important; }
+        .clr-purple { background-color: #f3f0ff !important; color: #6741d9 !important; border-left: 3px solid #9775fa !important; }
 
         /* 互動彈出視窗 (Modal) */
         .modal-overlay {
@@ -149,10 +163,12 @@
             width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 14px;
         }
         .time-row { display: flex; align-items: center; gap: 8px; }
-        .modal-action-btns { display: flex; gap: 10px; margin-top: 20px; }
-        .modal-action-btns button { flex: 1; border: none; padding: 10px; }
+        .modal-action-btns { display: flex; gap: 8px; margin-top: 20px; }
+        .modal-action-btns button { flex: 1; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; }
         .btn-save { background: #339af0; color: white; }
         .btn-save:hover { background: #228be6; }
+        .btn-delete { background: #fa5252; color: white; display: none; }
+        .btn-delete:hover { background: #e03131; }
         .btn-cancel { background: #e9ecef; color: #495057; }
         .btn-cancel:hover { background: #dee2e6; }
 
@@ -178,7 +194,8 @@
                 width: 100% !important; height: 92vh !important; overflow: hidden !important; 
             }
             .fc { width: 100% !important; height: 100% !important; }
-            .fc .fc-daygrid-day-frame { min-height: 0 !important; height: 100% !important; }
+            .fc .fc-daygrid-day { height: 15% !important; }
+            .fc .fc-daygrid-day-frame { height: 100% !important; overflow: hidden !important; }
             html, body, .fc-event, .holiday-bg { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
@@ -201,14 +218,14 @@
         <div class="modal-box">
             <h3 id="modalTitle">📅 管理行程</h3>
             
-            <div class="modal-group" style="background: #fff0f2; padding: 8px; border-radius: 6px; margin-bottom: 15px;">
+            <div class="modal-group" id="holidayGroupContainer" style="background: #fff0f2; padding: 8px; border-radius: 6px; margin-bottom: 15px;">
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 0; color: #c2255c;">
                     <input type="checkbox" id="modalHolidayCheckbox" onchange="toggleHolidayFromModal()" style="transform: scale(1.2);">
                     🎯 將這一天設為「粉紅假日」
                 </label>
             </div>
 
-            <hr style="border: none; border-top: 1px solid #e9ecef; margin: 15px 0;">
+            <hr id="modalDivider" style="border: none; border-top: 1px solid #e9ecef; margin: 15px 0;">
 
             <div class="modal-group">
                 <label>行程類別</label>
@@ -226,6 +243,9 @@
                     <option value="數學">數學</option>
                     <option value="社會">社會</option>
                     <option value="自然">自然</option>
+                    <option value="鋼琴">🎹 鋼琴</option>
+                    <option value="物理">⚛️ 物理</option>
+                    <option value="化學">🧪 化學</option>
                 </select>
             </div>
 
@@ -270,7 +290,8 @@
 
             <div class="modal-action-btns">
                 <button class="btn-cancel" onclick="closeModal()">取消</button>
-                <button class="btn-save" onclick="saveEventFromModal()">排入當日</button>
+                <button class="btn-delete" id="modalDeleteBtn" onclick="deleteEventFromModal()">刪除</button>
+                <button class="btn-save" id="modalSaveBtn" onclick="saveEventFromModal()">排入當日</button>
             </div>
         </div>
     </div>
@@ -278,6 +299,7 @@
     <script>
         let calendar;
         let selectedDateStr = ""; 
+        let currentEditingEvent = null; 
         const EVENTS_KEY = 'click_calendar_events_v4'; 
         const HOLIDAYS_KEY = 'click_calendar_holidays_v4';
 
@@ -292,6 +314,7 @@
                 initialView: 'dayGridMonth', 
                 locale: 'zh-tw',
                 editable: false,
+                dayMaxEvents: false, // 🔒 關閉 "+ 還有X項" 的隱藏機制，強制全數列出！
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
@@ -301,13 +324,10 @@
                 eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
                 events: savedEvents,
                 
-                dateClick: function(info) { openModal(info.dateStr); },
+                dateClick: function(info) { openModalForCreate(info.dateStr); },
                 eventClick: function(info) {
                     info.jsEvent.stopPropagation(); 
-                    if (confirm(`是否要刪除「${info.event.title}」？`)) {
-                        info.event.remove();
-                        saveEventsToStorage();
-                    }
+                    openModalForEdit(info.event); 
                 },
                 datesSet: function() { applyHolidayStyles(); }
             });
@@ -315,7 +335,6 @@
             calendar.render();
         });
 
-        // 強制無視網頁縮放、絕對正中心 PDF 轉檔功能
         async function downloadPDF() {
             const { jsPDF } = window.jspdf;
             const element = document.getElementById('calendar-container');
@@ -385,36 +404,104 @@
                     endSel.options.add(new Option(timeStr, timeStr));
                 }
             }
-            startSel.value = "14:00"; endSel.value = "15:30";
         }
-        function openModal(dateStr) {
+
+        function openModalForCreate(dateStr) {
+            currentEditingEvent = null;
             selectedDateStr = dateStr;
-            document.getElementById('modalTitle').innerText = `📅 管理 ${dateStr} 行程`;
+            
+            document.getElementById('modalTitle').innerText = `📅 新增 ${dateStr} 行程`;
+            document.getElementById('holidayGroupContainer').style.display = 'block';
+            document.getElementById('modalDivider').style.display = 'block';
             document.getElementById('modalHolidayCheckbox').checked = isDateHoliday(dateStr);
+            
+            document.getElementById('modalEventType').value = "course";
+            document.getElementById('modalCourseSelect').value = "國文";
             document.getElementById('modalActivityInput').value = "";
             document.getElementById('modalUserSelect').value = "Sean";
             document.getElementById('modalCustomUserInput').value = "";
-            document.getElementById('customUserGroup').style.display = 'none';
-            document.getElementById('modalColorSelect').value = "clr-blue"; 
+            document.getElementById('modalColorSelect').value = "clr-blue";
+            document.getElementById('modalStartTime').value = "14:00";
+            document.getElementById('modalEndTime').value = "15:30";
+            
+            toggleModalFields();
+            toggleCustomUserField();
+            
+            document.getElementById('modalDeleteBtn').style.display = 'none';
+            document.getElementById('modalSaveBtn').innerText = "排入當日";
             document.getElementById('eventModal').style.display = 'flex';
         }
+
+        function openModalForEdit(calEvent) {
+            currentEditingEvent = calEvent;
+            selectedDateStr = calEvent.startStr.split('T')[0];
+            const startTime = calEvent.startStr.split('T')[1].substring(0,5);
+            const endTime = calEvent.endStr ? calEvent.endStr.split('T')[1].substring(0,5) : startTime;
+
+            document.getElementById('modalTitle').innerText = `✏️ 修改行程 (${selectedDateStr})`;
+            document.getElementById('holidayGroupContainer').style.display = 'none';
+            document.getElementById('modalDivider').style.display = 'none';
+
+            let fullTitle = calEvent.title;
+            let type = fullTitle.startsWith('📚') ? 'course' : 'activity';
+            document.getElementById('modalEventType').value = type;
+
+            let memo = "Sean";
+            const memoMatch = fullTitle.match(/\(([^)]+)\)$/);
+            if (memoMatch) {
+                memo = memoMatch[1];
+                fullTitle = fullTitle.replace(` (${memo})`, '');
+            }
+            
+            fullTitle = fullTitle.replace('📚 ', '').replace('裝 ', '').replace('🏃 ', '');
+
+            if (type === 'course') {
+                const courseSelect = document.getElementById('modalCourseSelect');
+                courseSelect.value = Array.from(courseSelect.options).some(opt => opt.value === fullTitle) ? fullTitle : "國文";
+            } else {
+                document.getElementById('modalActivityInput').value = fullTitle;
+            }
+
+            const userSelect = document.getElementById('modalUserSelect');
+            if (memo === 'Sean' || memo === 'Vivi') {
+                userSelect.value = memo;
+            } else {
+                userSelect.value = '其他';
+                document.getElementById('modalCustomUserInput').value = memo;
+            }
+
+            document.getElementById('modalColorSelect').value = calEvent.classNames[0] || "clr-blue";
+            document.getElementById('modalStartTime').value = startTime;
+            document.getElementById('modalEndTime').value = endTime;
+
+            toggleModalFields();
+            toggleCustomUserField();
+
+            document.getElementById('modalDeleteBtn').style.display = 'block';
+            document.getElementById('modalSaveBtn').innerText = "儲存修改";
+            document.getElementById('eventModal').style.display = 'flex';
+        }
+
         function closeModal() { document.getElementById('eventModal').style.display = 'none'; }
+        
         function toggleModalFields() {
             const type = document.getElementById('modalEventType').value;
             document.getElementById('modalCourseGroup').style.display = (type === 'course') ? 'block' : 'none';
             document.getElementById('modalActivityGroup').style.display = (type === 'activity') ? 'block' : 'none';
         }
+        
         function toggleCustomUserField() {
             const userVal = document.getElementById('modalUserSelect').value;
             document.getElementById('customUserGroup').style.display = (userVal === '其他') ? 'block' : 'none';
         }
+
         function isDateHoliday(dateStr) {
             if (holidayOverrides[dateStr] !== undefined) return holidayOverrides[dateStr];
             const parts = dateStr.split('-');
             const dayObj = new Date(parts[0], parts[1] - 1, parts[2]);
-            const dayOfWeek = dayObj.getDay();
-            return (dayOfWeek === 0 || dayOfWeek === 6); 
+            return (dayObj.getDay() === 0 || dayObj.getDay() === 6); 
         }
+
         function toggleHolidayFromModal() {
             const isChecked = document.getElementById('modalHolidayCheckbox').checked;
             const parts = selectedDateStr.split('-');
@@ -425,6 +512,7 @@
             localStorage.setItem(HOLIDAYS_KEY, JSON.stringify(holidayOverrides));
             applyHolidayStyles();
         }
+
         function applyHolidayStyles() {
             document.querySelectorAll('[data-date]').forEach(el => {
                 const dateStr = el.getAttribute('data-date');
@@ -432,18 +520,21 @@
                 if (isDateHoliday(dateStr)) { el.classList.add('holiday-bg'); } else { el.classList.remove('holiday-bg'); }
             });
         }
+
         function saveEventFromModal() {
             const type = document.getElementById('modalEventType').value;
             const startTime = document.getElementById('modalStartTime').value;
             const endTime = document.getElementById('modalEndTime').value;
             const chosenColorClass = document.getElementById('modalColorSelect').value;
             const userSelectVal = document.getElementById('modalUserSelect').value;
+            
             let memo = userSelectVal;
             if (userSelectVal === '其他') {
                 memo = document.getElementById('modalCustomUserInput').value.trim();
                 if (!memo) memo = '其他';
             }
             if (startTime >= endTime) { alert("結束時間必須晚於開始時間！"); return; }
+            
             let title = "";
             if (type === 'course') { title = `📚 ${document.getElementById('modalCourseSelect').value}`; } 
             else {
@@ -452,16 +543,29 @@
                 title = `🏃 ${actName}`;
             }
             title += ` (${memo})`;
+
             const eventData = {
                 title: title,
                 start: `${selectedDateStr}T${startTime}:00`,
                 end: `${selectedDateStr}T${endTime}:00`,
                 className: chosenColorClass
             };
+
+            if (currentEditingEvent) { currentEditingEvent.remove(); }
+            
             calendar.addEvent(eventData);
             saveEventsToStorage();
             closeModal();
         }
+
+        function deleteEventFromModal() {
+            if (currentEditingEvent && confirm(`是否要刪除這個行程？`)) {
+                currentEditingEvent.remove();
+                saveEventsToStorage();
+                closeModal();
+            }
+        }
+
         function saveEventsToStorage() {
             const events = calendar.getEvents().map(evt => ({
                 title: evt.title,
@@ -471,6 +575,7 @@
             }));
             localStorage.setItem(EVENTS_KEY, JSON.stringify(events));
         }
+
         function clearAllData() {
             if (confirm("確定要清空所有行程與假日設定嗎？")) {
                 localStorage.removeItem(EVENTS_KEY);
