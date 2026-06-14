@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大格子互動月曆排程器 - 高容量不變形版</title>
+    <title>大格子互動月曆排程器 - 清楚大字自動換行版</title>
     
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
     
@@ -62,7 +62,6 @@
             padding: 15px;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-            overflow: hidden; 
         }
 
         .fc { height: 100% !important; background: #ffffff !important; }
@@ -83,18 +82,13 @@
             z-index: 5;
         }
 
-        /* 🔒 核心修改：死死固定每一格的高度，絕對不允許被撐開 */
+        /* 允許格子根據內容自由伸縮，確保字體放大後能看清楚 */
         .fc .fc-daygrid-body, .fc .fc-scrollgrid-sync-table {
-            height: 100% !important;
-        }
-        .fc .fc-daygrid-day {
-            height: 85px !important; /* 精準控制格子高度 */
+            height: auto !important;
         }
         .fc .fc-daygrid-day-frame {
+            min-height: 100px !important;
             height: 100% !important;
-            min-height: 0 !important;
-            max-height: 100% !important;
-            overflow: hidden !important; /* 限制多出來的內容不把格子撐大 */
             cursor: pointer;
             display: flex;
             flex-direction: column;
@@ -103,14 +97,13 @@
             background-color: #f8f9fa;
         }
 
-        /* 縮小日期的數字大小與上下的間距，挪出更多空間給行程 */
+        /* 日期數字大小 */
         .fc-daygrid-day-top {
             display: flex;
             justify-content: flex-end;
-            padding: 2px 6px !important;
-            font-size: 13px !important;
+            padding: 4px 8px !important;
+            font-size: 14px !important;
             font-weight: 600;
-            line-height: 1 !important;
         }
 
         /* 溫柔櫻花粉假日背景 */
@@ -118,26 +111,25 @@
             background-color: #fff0f2 !important; 
         }
 
-        /* 🔒 核心修改：精細縮小行程方塊，使其能安全塞入更多課堂 */
+        /* ✨ 核心大改動：放大字體、100% 自動換行 */
         .fc-event {
-            margin: 1px 3px !important;
-            padding: 1px 4px !important;
-            font-size: 11px !important; /* 微調字體，確保一行能容納更多資訊 */
-            border-radius: 3px !important;
-            font-weight: 500;
+            margin: 2px 4px !important;
+            padding: 4px 6px !important;
+            font-size: 13px !important; /* 🔍 字體放大，看得更清楚 */
+            border-radius: 4px !important;
+            font-weight: 600 !important; /* 🔍 加粗字體方便辨識 */
             border: none !important;
-            white-space: nowrap !important; /* 防止換行吃掉垂直空間 */
-            overflow: hidden;
-            text-overflow: ellipsis;
-            line-height: 1.3 !important;
-            height: 16px !important; /* 固定單個行程高度 */
+            white-space: normal !important; /* 🔍 100% 自動換行，絕不切字 */
+            word-break: break-all !important;
+            line-height: 1.4 !important;
+            height: auto !important; /* 高度隨文字長度自動延伸 */
         }
         
-        .clr-blue { background-color: #e7f5ff !important; color: #1c7ed6 !important; border-left: 3px solid #339af0 !important; }
-        .clr-green { background-color: #ebfbee !important; color: #2b8a3e !important; border-left: 3px solid #40c057 !important; }
-        .clr-pink { background-color: #fff0f2 !important; color: #c2255c !important; border-left: 3px solid #f783ac !important; }
-        .clr-orange { background-color: #fff4e6 !important; color: #d9480f !important; border-left: 3px solid #ffa94d !important; }
-        .clr-purple { background-color: #f3f0ff !important; color: #6741d9 !important; border-left: 3px solid #9775fa !important; }
+        .clr-blue { background-color: #e7f5ff !important; color: #1c7ed6 !important; border-left: 4px solid #339af0 !important; }
+        .clr-green { background-color: #ebfbee !important; color: #2b8a3e !important; border-left: 4px solid #40c057 !important; }
+        .clr-pink { background-color: #fff0f2 !important; color: #c2255c !important; border-left: 4px solid #f783ac !important; }
+        .clr-orange { background-color: #fff4e6 !important; color: #d9480f !important; border-left: 4px solid #ffa94d !important; }
+        .clr-purple { background-color: #f3f0ff !important; color: #6741d9 !important; border-left: 4px solid #9775fa !important; }
 
         /* 互動彈出視窗 (Modal) */
         .modal-overlay {
@@ -171,33 +163,6 @@
         .btn-delete:hover { background: #e03131; }
         .btn-cancel { background: #e9ecef; color: #495057; }
         .btn-cancel:hover { background: #dee2e6; }
-
-        /* ================= 列印與轉存 PDF 專用樣式覆蓋 ================= */
-        @media print {
-            @page { size: A4 landscape; margin: 0.5cm; }
-            html, body {
-                width: 100% !important;
-                height: 100vh !important;
-                display: block !important; 
-                background: #ffffff !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                overflow: hidden !important;
-            }
-            .top-bar { display: none !important; }
-            .fc-header-toolbar .fc-toolbar-chunk:first-child, 
-            .fc-header-toolbar .fc-toolbar-chunk:last-child {
-                display: none !important;
-            }
-            #calendar-container { 
-                box-shadow: none !important; padding: 0 !important; margin: 0 !important;
-                width: 100% !important; height: 92vh !important; overflow: hidden !important; 
-            }
-            .fc { width: 100% !important; height: 100% !important; }
-            .fc .fc-daygrid-day { height: 15% !important; }
-            .fc .fc-daygrid-day-frame { height: 100% !important; overflow: hidden !important; }
-            html, body, .fc-event, .holiday-bg { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-        }
     </style>
 </head>
 <body>
@@ -314,7 +279,7 @@
                 initialView: 'dayGridMonth', 
                 locale: 'zh-tw',
                 editable: false,
-                dayMaxEvents: false, // 🔒 關閉 "+ 還有X項" 的隱藏機制，強制全數列出！
+                dayMaxEvents: false, // 完整顯示，不隱藏
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
@@ -335,6 +300,7 @@
             calendar.render();
         });
 
+        // ✨ 智慧 PDF 輸出：不管日曆被行程撐到多高，都能完美等比例壓進單頁 A4 橫式中！
         async function downloadPDF() {
             const { jsPDF } = window.jspdf;
             const element = document.getElementById('calendar-container');
@@ -351,13 +317,14 @@
             if(todayBtn) todayBtn.style.visibility = 'hidden';
 
             try {
+                // 暫時將寬度固定在適合清晰輸出的高解析度外觀
                 const originalStyle = element.style.cssText;
-                element.style.width = '1150px';
-                element.style.height = '800px';
+                element.style.width = '1200px';
                 calendar.updateSize(); 
 
-                await new Promise(resolve => setTimeout(resolve, 250));
+                await new Promise(resolve => setTimeout(resolve, 300));
 
+                // 擷取整個行事曆的實際渲染畫面（高度會隨多個行程自動拉長）
                 const canvas = await html2canvas(element, {
                     scale: 2, 
                     useCORS: true,
@@ -365,20 +332,45 @@
                     logging: false
                 });
 
+                // 還原網頁原本的樣式
                 element.style.cssText = originalStyle;
                 calendar.updateSize();
                 if(prevBtn) prevBtn.style.visibility = 'visible';
                 if(nextBtn) nextBtn.style.visibility = 'visible';
                 if(todayBtn) todayBtn.style.visibility = 'visible';
 
-                const imgData = canvas.toDataURL('image/jpeg', 0.98);
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                
+                // 建立標準橫式 A4 PDF (297mm x 210mm)
                 const pdf = new jsPDF({
                     orientation: 'landscape',
                     unit: 'mm',
                     format: 'a4'
                 });
 
-                pdf.addImage(imgData, 'JPEG', 6, 6, 285, 198);
+                const pdfWidth = 297;
+                const pdfHeight = 210;
+                const margin = 6;
+                const printableWidth = pdfWidth - (margin * 2); // 285 mm
+                const printableHeight = pdfHeight - (margin * 2); // 198 mm
+
+                // 核心關鍵：根據畫布的「實際寬高比例」自動縮放
+                const canvasRatio = canvas.height / canvas.width;
+                
+                let printW = printableWidth;
+                let printH = printableWidth * canvasRatio;
+
+                // 如果算出來的高度超過了 A4 可列印高度，改以高度為基準等比例縮小寬度
+                if (printH > printableHeight) {
+                    printH = printableHeight;
+                    printW = printableHeight / canvasRatio;
+                }
+
+                // 置中對齊貼上圖片
+                const xOffset = margin + (printableWidth - printW) / 2;
+                const yOffset = margin + (printableHeight - printH) / 2;
+
+                pdf.addImage(imgData, 'JPEG', xOffset, yOffset, printW, printH);
                 
                 const monthTitle = document.querySelector('.fc-toolbar-title').innerText || '行事曆';
                 pdf.save(`${monthTitle}_排班表.pdf`);
@@ -453,7 +445,7 @@
                 fullTitle = fullTitle.replace(` (${memo})`, '');
             }
             
-            fullTitle = fullTitle.replace('📚 ', '').replace('裝 ', '').replace('🏃 ', '');
+            fullTitle = fullTitle.replace('📚 ', '').replace('🏃 ', '');
 
             if (type === 'course') {
                 const courseSelect = document.getElementById('modalCourseSelect');
