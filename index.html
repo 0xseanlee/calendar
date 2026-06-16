@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大格子互動月曆排程器 - 字體可調極簡無空格版</title>
+    <title>大格子互動月曆排程器 - 時間內容分行版</title>
     
     <!-- 引入 FullCalendar 6 -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
@@ -43,7 +43,6 @@
         .top-bar h2 { margin: 0; font-size: 18px; color: #333; }
         .top-bar-controls { display: flex; align-items: center; gap: 20px; }
         
-        /* 滑桿控制樣式 */
         .slider-group {
             display: flex;
             align-items: center;
@@ -105,7 +104,6 @@
             z-index: 5;
         }
 
-        /* 允許日曆表格具備穩定的基礎伸縮度 */
         .fc .fc-daygrid-body, .fc .fc-scrollgrid-sync-table {
             height: 100% !important;
         }
@@ -121,7 +119,6 @@
             background-color: #f8f9fa;
         }
 
-        /* 日期數字 */
         .fc-daygrid-day-top {
             display: flex;
             justify-content: flex-end;
@@ -130,47 +127,61 @@
             font-weight: 600;
         }
 
-        /* 溫柔櫻花粉假日背景 */
         .holiday-bg {
             background-color: #fff0f2 !important; 
         }
 
-        /* 🔒 堅持單行不換行＋超緊湊文字排列（字體大小改由 CSS 變數控制） */
+        /* ================= ✨ ✨ ✨ 核心修改：時間內容分行外觀 ✨ ✨ ✨ ================= */
         .fc-event {
-            margin: 1px 4px !important;
-            padding: 2px 4px !important;
-            font-size: var(--event-font-size, 13px) !important; /* ✨ 綁定動態字體變數 */
+            margin: 2px 4px !important;
+            padding: 3px 6px !important;
+            font-size: var(--event-font-size, 13px) !important; 
             border-radius: 4px !important;
             font-weight: 600 !important;
             border: none !important;
-            height: auto !important;
-            min-height: 18px !important;
-            white-space: nowrap !important;     
-            overflow: hidden !important;        
-            text-overflow: ellipsis !important; 
+            height: auto !important; /* 解除高度限制讓內部可以分行 */
+        }
+
+        /* 強制排隊方塊內部的架構變成上下分行 (Flex Column) */
+        .fc-event-main-frame {
+            display: flex !important;
+            flex-direction: column !important; 
+            align-items: flex-start !important;
+            justify-content: center !important;
+            width: 100% !important;
+        }
+
+        /* 第一行：時間樣式（單行鎖死＋省略號） */
+        .fc-event-time {
+            font-size: 0.95em !important;
+            margin-bottom: 1px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            width: 100% !important;
+            display: block !important;
+        }
+
+        /* 第二行：標題內容樣式（單行鎖死＋省略號） */
+        .fc-event-title-container {
+            width: 100% !important;
+            display: block !important;
+        }
+        .fc-event-title {
+            font-size: 1em !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            width: 100% !important;
+            display: block !important;
         }
 
         .fc-daygrid-event-harness {
             position: relative !important;
             visibility: visible !important;
-            height: auto !important;            
+            height: auto !important; /* 隨內部兩行文字高度自動配置 */
         }
-
-        .fc-event-main-frame {
-            display: flex !important;
-            flex-direction: row !important;
-            align-items: center;
-            justify-content: flex-start;
-        }
-
-        .fc-event-main,
-        .fc-event-title,
-        .fc-event-time {
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-            font-size: inherit !important; /* 確保內部容器與父層字體一致 */
-        }
+        /* ============================================================================== */
         
         .clr-blue { background-color: #e7f5ff !important; color: #1c7ed6 !important; border-left: 4px solid #339af0 !important; }
         .clr-green { background-color: #ebfbee !important; color: #2b8a3e !important; border-left: 4px solid #40c057 !important; }
@@ -219,9 +230,9 @@
         <h2>我的大格子行事曆</h2>
         
         <div class="top-bar-controls">
-            <!-- ✨ 全新功能：字體大小調整槓桿 -->
+            <!-- 字體大小調整槓桿 -->
             <div class="slider-group">
-                <label for="fontSizeSlider">🔎 字體大小:</label>
+                <label style="cursor: pointer;" for="fontSizeSlider">🔎 字體大小:</label>
                 <input type="range" id="fontSizeSlider" min="10" max="20" value="13" oninput="updateFontSize(this.value)">
                 <span id="fontSizeVal">13px</span>
             </div>
@@ -330,16 +341,13 @@
 
         let holidayOverrides = JSON.parse(localStorage.getItem(HOLIDAYS_KEY)) || {};
 
-        // ✨ 控制字體大小的 JavaScript 函數
         function updateFontSize(val) {
             document.documentElement.style.setProperty('--event-font-size', val + 'px');
             document.getElementById('fontSizeVal').innerText = val + 'px';
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            // 初始化字體大小變數
             updateFontSize(document.getElementById('fontSizeSlider').value);
-            
             populateModalTimeSelects();
             const savedEvents = JSON.parse(localStorage.getItem(EVENTS_KEY)) || [];
 
@@ -354,6 +362,7 @@
                     center: 'title',
                     right: '' 
                 },
+                // 顯示結束時間
                 displayEventEnd: true, 
                 eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false, meridian: false },
                 events: savedEvents,
@@ -369,7 +378,7 @@
             calendar.render();
         });
 
-        // 固定比例的虛擬獨立大畫布，徹底解決截圖跑掉的問題
+        // 固定比例的高解析度 PDF 轉檔
         async function downloadPDF() {
             const { jsPDF } = window.jspdf;
             const element = document.getElementById('calendar-container');
