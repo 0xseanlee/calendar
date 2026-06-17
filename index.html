@@ -3,266 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大格子互動月曆排程器 - 時間內容分行版</title>
+    <title>大格子互動月曆排程器 - 終極整合版</title>
     
-    <!-- 引入 FullCalendar 6 -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-    
-    <!-- 網頁轉 PDF 的外掛 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <style>
-        /* ================= 網頁版全螢幕佈局 ================= */
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #f1f3f5;
-        }
-
-        body {
-            display: flex;
-            flex-direction: column;
-            box-sizing: border-box;
-            padding: 20px;
-        }
-
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #ffffff;
-            padding: 12px 24px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-        }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f1f3f5; }
+        body { display: flex; flex-direction: column; box-sizing: border-box; padding: 20px; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 12px 24px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
         .top-bar h2 { margin: 0; font-size: 18px; color: #333; }
-        .top-bar-controls { display: flex; align-items: center; gap: 20px; }
-        
-        .slider-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            font-weight: bold;
-            color: #495057;
-            background: #f8f9fa;
-            padding: 6px 12px;
-            border-radius: 6px;
-            border: 1px solid #dee2e6;
-        }
-        .slider-group input[type="range"] {
-            cursor: pointer;
-            width: 120px;
-        }
-
-        .top-bar-btns { display: flex; gap: 10px; }
-        
-        button {
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .btn-normal { background: #ffffff; border: 1px solid #ced4da; color: #495057; }
-        .btn-normal:hover { background: #f8f9fa; }
+        .top-bar-controls { display: flex; align-items: center; gap: 15px; }
+        .slider-group { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: bold; color: #495057; background: #f8f9fa; padding: 6px 12px; border-radius: 6px; border: 1px solid #dee2e6; }
+        .slider-group input[type="range"] { cursor: pointer; width: 100px; }
+        .top-bar-btns { display: flex; gap: 8px; }
+        button { padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
+        .btn-recurring { background: #74c0fc; color: #ffffff; border: none; }
+        .btn-recurring:hover { background: #4dabf7; }
         .btn-print { background: #37b24d; border: none; color: white; transition: background 0.2s; }
         .btn-print:hover { background: #2b8a3e; }
         .btn-danger { background: #fff5f5; border: 1px solid #ffc9c9; color: #fa5252; }
         .btn-danger:hover { background: #ffe3e3; }
-
-        /* 日曆主容器 */
-        #calendar-container {
-            flex: 1;
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-            box-sizing: border-box;
-        }
-
+        #calendar-container { flex: 1; background: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); box-sizing: border-box; }
         .fc { height: 100% !important; background: #ffffff !important; }
-        
-        /* 標題絕對置中 */
-        .fc-header-toolbar {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1em !important;
-        }
-        .fc-header-toolbar .fc-toolbar-chunk:nth-child(2) {
-            position: absolute !important;
-            left: 50% !important;
-            transform: translateX(-50%) !important;
-            text-align: center;
-            z-index: 5;
-        }
-
-        .fc .fc-daygrid-body, .fc .fc-scrollgrid-sync-table {
-            height: 100% !important;
-        }
-        .fc .fc-daygrid-day-frame {
-            min-height: 110px !important;
-            height: 100% !important;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            box-sizing: border-box;
-        }
-        .fc .fc-daygrid-day-frame:hover {
-            background-color: #f8f9fa;
-        }
-
-        .fc-daygrid-day-top {
-            display: flex;
-            justify-content: flex-end;
-            padding: 4px 8px !important;
-            font-size: 14px !important;
-            font-weight: 600;
-        }
-
-        .holiday-bg {
-            background-color: #fff0f2 !important; 
-        }
-
-        /* ================= ✨ ✨ ✨ 核心修改：時間內容分行外觀 ✨ ✨ ✨ ================= */
-        .fc-event {
-            margin: 2px 4px !important;
-            padding: 3px 6px !important;
-            font-size: var(--event-font-size, 13px) !important; 
-            border-radius: 4px !important;
-            font-weight: 600 !important;
-            border: none !important;
-            height: auto !important; /* 解除高度限制讓內部可以分行 */
-        }
-
-        /* 強制排隊方塊內部的架構變成上下分行 (Flex Column) */
-        .fc-event-main-frame {
-            display: flex !important;
-            flex-direction: column !important; 
-            align-items: flex-start !important;
-            justify-content: center !important;
-            width: 100% !important;
-        }
-
-        /* 第一行：時間樣式（單行鎖死＋省略號） */
-        .fc-event-time {
-            font-size: 0.95em !important;
-            margin-bottom: 1px !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-            width: 100% !important;
-            display: block !important;
-        }
-
-        /* 第二行：標題內容樣式（單行鎖死＋省略號） */
-        .fc-event-title-container {
-            width: 100% !important;
-            display: block !important;
-        }
-        .fc-event-title {
-            font-size: 1em !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-            width: 100% !important;
-            display: block !important;
-        }
-
-        .fc-daygrid-event-harness {
-            position: relative !important;
-            visibility: visible !important;
-            height: auto !important; /* 隨內部兩行文字高度自動配置 */
-        }
-        /* ============================================================================== */
-        
+        .fc-header-toolbar { position: relative; display: flex; align-items: center; justify-content: space-between; margin-bottom: 1em !important; }
+        .fc-header-toolbar .fc-toolbar-chunk:nth-child(2) { position: absolute !important; left: 50% !important; transform: translateX(-50%) !important; text-align: center; z-index: 5; }
+        .fc .fc-daygrid-body, .fc .fc-scrollgrid-sync-table { height: 100% !important; }
+        .fc .fc-daygrid-day-frame { min-height: 110px !important; height: 100% !important; cursor: pointer; display: flex; flex-direction: column; box-sizing: border-box; }
+        .fc .fc-daygrid-day-frame:hover { background-color: #f8f9fa; }
+        .fc-daygrid-day-top { display: flex; justify-content: flex-end; padding: 4px 8px !important; font-size: 14px !important; font-weight: 600; }
+        .holiday-bg { background-color: #fff0f2 !important; }
+        .fc-event { margin: 2px 4px !important; padding: 3px 6px !important; font-size: var(--event-font-size, 13px) !important; border-radius: 4px !important; font-weight: 600 !important; border: none !important; height: 22px !important; line-height: 16px !important; }
+        .fc-event-main-frame { display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: flex-start !important; width: 100% !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+        .fc-event-title-container { display: inline !important; width: 100%; }
+        .fc-event-title { font-size: 1em !important; display: inline !important; white-space: nowrap !important; }
+        .fc-daygrid-event-harness { position: relative !important; visibility: visible !important; height: auto !important; }
         .clr-blue { background-color: #e7f5ff !important; color: #1c7ed6 !important; border-left: 4px solid #339af0 !important; }
         .clr-green { background-color: #ebfbee !important; color: #2b8a3e !important; border-left: 4px solid #40c057 !important; }
         .clr-pink { background-color: #fff0f2 !important; color: #c2255c !important; border-left: 4px solid #f783ac !important; }
         .clr-orange { background-color: #fff4e6 !important; color: #d9480f !important; border-left: 4px solid #ffa94d !important; }
         .clr-purple { background-color: #f3f0ff !important; color: #6741d9 !important; border-left: 4px solid #9775fa !important; }
-
-        /* 互動彈出視窗 (Modal) */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.4);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-box {
-            background: #ffffff;
-            padding: 24px;
-            border-radius: 12px;
-            width: 320px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-        }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); z-index: 9999; justify-content: center; align-items: center; }
+        .modal-box { background: #ffffff; padding: 24px; border-radius: 12px; width: 340px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
         .modal-box h3 { margin-top: 0; margin-bottom: 15px; font-size: 16px; color: #212529; text-align: center; }
         .modal-group { margin-bottom: 12px; }
         .modal-group label { display: block; font-size: 13px; font-weight: 600; color: #495057; margin-bottom: 4px; }
-        .modal-group select, .modal-group input[type="text"] {
-            width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 14px;
-        }
+        .modal-group select, .modal-group input[type="text"] { width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
         .time-row { display: flex; align-items: center; gap: 8px; }
-        .modal-action-btns { display: flex; gap: 8px; margin-top: 20px; }
-        .modal-action-btns button { flex: 1; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .btn-save { background: #339af0; color: white; }
+        .checkbox-row { display: flex; gap: 15px; background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #e9ecef; margin-bottom: 12px;}
+        .checkbox-row label { display: flex; align-items: center; gap: 5px; margin-bottom: 0; font-size: 13px; cursor: pointer; }
+        .modal-action-btns { display: flex; flex-direction: column; gap: 6px; margin-top: 20px; }
+        .modal-btn-row { display: flex; gap: 6px; }
+        .modal-action-btns button { border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-save { background: #339af0; color: white; flex: 1; }
         .btn-save:hover { background: #228be6; }
-        .btn-delete { background: #fa5252; color: white; display: none; }
+        .btn-delete { background: #fa5252; color: white; flex: 1; display: none; }
         .btn-delete:hover { background: #e03131; }
-        .btn-cancel { background: #e9ecef; color: #495057; }
+        .btn-cancel { background: #e9ecef; color: #495057; flex: 1; }
         .btn-cancel:hover { background: #dee2e6; }
+        .btn-delete-series { background: #333333; color: white; width: 100%; display: none; }
+        .btn-delete-series:hover { background: #111111; }
+        .dow-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+        .dow-group label { display: flex; align-items: center; gap: 3px; font-size: 14px; font-weight: 500; cursor: pointer; background: #ffffff; padding: 4px 8px; border-radius: 4px; border: 1px solid #a5d8ff; }
+        .dow-group label:hover { background: #d0ebff; }
     </style>
 </head>
 <body>
 
-    <!-- 頂部功能條 -->
     <div class="top-bar">
         <h2>我的大格子行事曆</h2>
-        
         <div class="top-bar-controls">
-            <!-- 字體大小調整槓桿 -->
             <div class="slider-group">
-                <label style="cursor: pointer;" for="fontSizeSlider">🔎 字體大小:</label>
+                <label style="cursor: pointer;" for="fontSizeSlider">🔎 字體:</label>
                 <input type="range" id="fontSizeSlider" min="10" max="20" value="13" oninput="updateFontSize(this.value)">
                 <span id="fontSizeVal">13px</span>
             </div>
-            
             <div class="top-bar-btns">
-                <button class="btn-print" onclick="downloadPDF()">📥 下載完美單頁 PDF</button>
-                <button class="btn-danger" onclick="clearAllData()">⚠️ 清空所有紀錄</button>
+                <button class="btn-recurring" onclick="openModalForRecurring()">🔁 每週固定設定</button>
+                <button class="btn-print" onclick="downloadPDF()">📥 下載 PDF</button>
+                <button class="btn-danger" onclick="clearAllData()">⚠️ 清空紀錄</button>
             </div>
         </div>
     </div>
 
-    <!-- 大日曆主體 -->
     <div id="calendar-container">
         <div id="calendar"></div>
     </div>
 
-    <!-- 點擊格子彈出視窗 -->
     <div class="modal-overlay" id="eventModal">
         <div class="modal-box">
             <h3 id="modalTitle">📅 管理行程</h3>
-            
             <div class="modal-group" id="holidayGroupContainer" style="background: #fff0f2; padding: 8px; border-radius: 6px; margin-bottom: 15px;">
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 0; color: #c2255c;">
-                    <input type="checkbox" id="modalHolidayCheckbox" onchange="toggleHolidayFromModal()" style="transform: scale(1.2);">
-                    🎯 將這一天設為「粉紅假日」
+                    <input type="checkbox" id="modalHolidayCheckbox" onchange="toggleHolidayFromModal()" style="transform: scale(1.2);"> 🎯 將這一天設為「粉紅假日」
                 </label>
             </div>
-
             <hr id="modalDivider" style="border: none; border-top: 1px solid #e9ecef; margin: 15px 0;">
-
+            <div class="modal-group" id="recurDowGroup" style="display: none; background: #e7f5ff; padding: 12px; border-radius: 6px; border: 1px solid #74c0fc;">
+                <label style="color: #1c7ed6; font-size: 14px;">要設定每週的星期幾？(可複選)</label>
+                <div class="dow-group">
+                    <label><input type="checkbox" class="recur-dow-checkbox" value="1"> 一</label>
+                    <label><input type="checkbox" class="recur-dow-checkbox" value="2"> 二</label>
+                    <label><input type="checkbox" class="recur-dow-checkbox" value="3"> 三</label>
+                    <label><input type="checkbox" class="recur-dow-checkbox" value="4"> 四</label>
+                    <label><input type="checkbox" class="recur-dow-checkbox" value="5"> 五</label>
+                    <label><input type="checkbox" class="recur-dow-checkbox" value="6"> 六</label>
+                    <label><input type="checkbox" class="recur-dow-checkbox" value="0"> 日</label>
+                </div>
+            </div>
+            <div class="modal-group checkbox-row">
+                <label><input type="checkbox" id="modalIsAllDay" onchange="toggleAllDayField()"> 🌐 整天行程</label>
+            </div>
             <div class="modal-group">
                 <label>行程類別</label>
                 <select id="modalEventType" onchange="toggleModalFields()">
@@ -270,64 +122,54 @@
                     <option value="activity">🏃 活動 (自訂內容)</option>
                 </select>
             </div>
-
             <div class="modal-group" id="modalCourseGroup">
                 <label>選擇科目</label>
                 <select id="modalCourseSelect">
-                    <option value="國">國文</option>
-                    <option value="英">英文</option>
-                    <option value="數">數學</option>
-                    <option value="社">社會</option>
-                    <option value="自">自然</option>
-                    <option value="琴">🎹 鋼琴</option>
-                    <option value="物">⚛️ 物理</option>
-                    <option value="化">🧪 化學</option>
+                    <option value="國">國文</option> <option value="英">英文</option> <option value="數">數學</option>
+                    <option value="社">社會</option> <option value="自">自然</option> <option value="琴">🎹 鋼琴</option>
+                    <option value="物">⚛️ 物理</option> <option value="化">🧪 化學</option>
                 </select>
             </div>
-
             <div class="modal-group" id="modalActivityGroup" style="display: none;">
                 <label>活動名稱</label>
-                <input type="text" id="modalActivityInput" placeholder="例如：寫作業、休息">
+                <input type="text" id="modalActivityInput" placeholder="例如：寫作業">
             </div>
-
+            
             <div class="modal-group">
                 <label>行程對象</label>
                 <select id="modalUserSelect" onchange="toggleCustomUserField()">
-                    <option value="Sean">👦 Sean</option>
-                    <option value="Vivi">👧 Vivi</option>
+                    <option value="S">👦 S</option> 
+                    <option value="v">👧 v</option>
+                    <option value="S+v">👫 S+v</option>
+                    <option value="全家">👪 全家</option> 
                     <option value="其他">✍️ 其他 (自訂)</option>
                 </select>
             </div>
-
             <div class="modal-group" id="customUserGroup" style="display: none;">
-                <label>輸入自訂對象/備註</label>
-                <input type="text" id="modalCustomUserInput" placeholder="例如：全家">
+                <label>輸入自訂對象</label>
+                <input type="text" id="modalCustomUserInput" placeholder="例如：線上課">
             </div>
-
             <div class="modal-group">
                 <label>選擇標籤顏色</label>
                 <select id="modalColorSelect">
-                    <option value="clr-blue">🔵 質感藍 (推薦 Sean)</option>
-                    <option value="clr-pink">🔴 浪漫粉 (推薦 Vivi)</option>
-                    <option value="clr-green">🟢 清新綠</option>
+                    <option value="clr-blue">🔵 質感藍 (推薦 S)</option> <option value="clr-pink">🔴 浪漫粉 (推薦 v)</option>
+                    <option value="clr-purple">🟣 氣質紫 (推薦 全家 / S+v)</option> <option value="clr-green">🟢 清新綠</option>
                     <option value="clr-orange">🟠 活力橘</option>
-                    <option value="clr-purple">🟣 氣質紫</option>
                 </select>
             </div>
-
-            <div class="modal-group">
-                <label>時間範圍 (半小時單位)</label>
+            <div class="modal-group" id="modalTimeGroup">
                 <div class="time-row">
-                    <select id="modalStartTime"></select>
-                    <span>至</span>
-                    <select id="modalEndTime"></select>
+                    <div style="flex: 1;"><label>開始時間</label><select id="modalStartTime"></select></div>
+                    <div style="flex: 1;"><label>結束時間 (選填)</label><select id="modalEndTime"></select></div>
                 </div>
             </div>
-
             <div class="modal-action-btns">
-                <button class="btn-cancel" onclick="closeModal()">取消</button>
-                <button class="btn-delete" id="modalDeleteBtn" onclick="deleteEventFromModal()">刪除</button>
-                <button class="btn-save" id="modalSaveBtn" onclick="saveEventFromModal()">排入當日</button>
+                <div class="modal-btn-row">
+                    <button class="btn-cancel" onclick="closeModal()">取消</button>
+                    <button class="btn-delete" id="modalDeleteBtn" onclick="deleteEventFromModal()">刪除此日</button>
+                    <button class="btn-save" id="modalSaveBtn" onclick="saveEventFromModal()">儲存行程</button>
+                </div>
+                <button class="btn-delete-series" id="modalDeleteSeriesBtn" onclick="deleteSeriesFromModal()">❌ 刪除此系列全數行程</button>
             </div>
         </div>
     </div>
@@ -336,9 +178,9 @@
         let calendar;
         let selectedDateStr = ""; 
         let currentEditingEvent = null; 
-        const EVENTS_KEY = 'click_calendar_events_v4'; 
+        let isRecurringMode = false; 
+        const EVENTS_KEY = 'click_calendar_events_v7'; 
         const HOLIDAYS_KEY = 'click_calendar_holidays_v4';
-
         let holidayOverrides = JSON.parse(localStorage.getItem(HOLIDAYS_KEY)) || {};
 
         function updateFontSize(val) {
@@ -351,287 +193,140 @@
             populateModalTimeSelects();
             const savedEvents = JSON.parse(localStorage.getItem(EVENTS_KEY)) || [];
 
-            const calendarEl = document.getElementById('calendar');
-            calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth', 
-                locale: 'zh-tw',
-                editable: false,
-                dayMaxEvents: false, 
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: '' 
-                },
-                // 顯示結束時間
-                displayEventEnd: true, 
-                eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false, meridian: false },
-                events: savedEvents,
-                
+            calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+                initialView: 'dayGridMonth', locale: 'zh-tw', editable: false, dayMaxEvents: false,
+                headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
+                displayEventTime: false, events: savedEvents,
                 dateClick: function(info) { openModalForCreate(info.dateStr); },
-                eventClick: function(info) {
-                    info.jsEvent.stopPropagation(); 
-                    openModalForEdit(info.event); 
-                },
+                eventClick: function(info) { info.jsEvent.stopPropagation(); openModalForEdit(info.event); },
                 datesSet: function() { applyHolidayStyles(); }
             });
-
             calendar.render();
         });
 
-        // 固定比例的高解析度 PDF 轉檔
         async function downloadPDF() {
             const { jsPDF } = window.jspdf;
             const element = document.getElementById('calendar-container');
             const btn = document.querySelector('.btn-print');
-            
-            btn.innerText = "⏳ 正在繪製 A4 PDF...";
-            btn.disabled = true;
-
-            const prevBtn = document.querySelector('.fc-prev-button');
-            const nextBtn = document.querySelector('.fc-next-button');
-            const todayBtn = document.querySelector('.fc-today-button');
-            if(prevBtn) prevBtn.style.visibility = 'hidden';
-            if(nextBtn) nextBtn.style.visibility = 'hidden';
-            if(todayBtn) todayBtn.style.visibility = 'hidden';
-
+            btn.innerText = "⏳ 繪製中..."; btn.disabled = true;
             try {
                 const originalStyle = element.style.cssText;
-                element.style.width = '1450px';
-                element.style.height = '900px';
-                calendar.updateSize();
-
-                await document.fonts.ready;
-                await new Promise(resolve => setTimeout(resolve, 600));
-
-                const canvas = await html2canvas(element, {
-                    scale: 2, 
-                    useCORS: true,
-                    backgroundColor: '#ffffff',
-                    logging: false,
-                    removeContainer: true
-                });
-
-                element.style.cssText = originalStyle;
-                calendar.updateSize();
-                if(prevBtn) prevBtn.style.visibility = 'visible';
-                if(nextBtn) nextBtn.style.visibility = 'visible';
-                if(todayBtn) todayBtn.style.visibility = 'visible';
-
+                element.style.width = '1450px'; element.style.height = '900px'; calendar.updateSize();
+                await new Promise(r => setTimeout(r, 600));
+                const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false, removeContainer: true });
+                element.style.cssText = originalStyle; calendar.updateSize();
                 const imgData = canvas.toDataURL('image/jpeg', 0.98);
-                
-                const pdf = new jsPDF({
-                    orientation: 'landscape',
-                    unit: 'mm',
-                    format: 'a4'
-                });
-
-                const margin = 5;
-                const printW = 297 - (margin * 2); 
-                const printH = 210 - (margin * 2); 
-
-                pdf.addImage(imgData, 'JPEG', margin, margin, printW, printH);
-                
-                const monthTitle = document.querySelector('.fc-toolbar-title').innerText || '行事曆';
-                pdf.save(`${monthTitle}_排班表.pdf`);
-
-            } catch (error) {
-                console.error(error);
-                alert("轉換 PDF 出現錯誤！");
-            } finally {
-                btn.innerText = "📥 下載完美單頁 PDF";
-                btn.disabled = false;
-            }
+                const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+                pdf.addImage(imgData, 'JPEG', 5, 5, 287, 200);
+                pdf.save(`${document.querySelector('.fc-toolbar-title').innerText || '行事曆'}_排班表.pdf`);
+            } finally { btn.innerText = "📥 下載 PDF"; btn.disabled = false; }
         }
 
         function populateModalTimeSelects() {
-            const startSel = document.getElementById('modalStartTime');
-            const endSel = document.getElementById('modalEndTime');
+            const startSel = document.getElementById('modalStartTime'), endSel = document.getElementById('modalEndTime');
+            endSel.options.add(new Option("無", ""));
             for (let h = 0; h < 24; h++) {
                 for (let m = 0; m < 60; m += 30) {
-                    const hh = String(h).padStart(2, '0');
-                    const mm = String(m).padStart(2, '0');
-                    const timeStr = `${hh}:${mm}`;
-                    startSel.options.add(new Option(timeStr, timeStr));
-                    endSel.options.add(new Option(timeStr, timeStr));
+                    const timeStr = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+                    startSel.options.add(new Option(timeStr, timeStr)); endSel.options.add(new Option(timeStr, timeStr));
                 }
             }
         }
 
+        function toggleAllDayField() { document.getElementById('modalTimeGroup').style.display = document.getElementById('modalIsAllDay').checked ? 'none' : 'block'; }
+        function toggleModalFields() { document.getElementById('modalCourseGroup').style.display = (document.getElementById('modalEventType').value === 'course') ? 'block' : 'none'; document.getElementById('modalActivityGroup').style.display = (document.getElementById('modalEventType').value === 'activity') ? 'block' : 'none'; }
+        function toggleCustomUserField() { document.getElementById('customUserGroup').style.display = (document.getElementById('modalUserSelect').value === '其他') ? 'block' : 'none'; }
+
+        function openModalForRecurring() {
+            isRecurringMode = true; currentEditingEvent = null;
+            document.getElementById('modalTitle').innerText = `🔁 批次排入每週課表`;
+            document.getElementById('holidayGroupContainer').style.display = 'none'; document.getElementById('modalDivider').style.display = 'none';
+            document.getElementById('recurDowGroup').style.display = 'block'; 
+            document.querySelectorAll('.recur-dow-checkbox').forEach(cb => cb.checked = false);
+            document.getElementById('modalDeleteBtn').style.display = 'none'; document.getElementById('modalDeleteSeriesBtn').style.display = 'none';
+            document.getElementById('modalSaveBtn').innerText = "一鍵生成全年課表";
+            document.getElementById('eventModal').style.display = 'flex';
+        }
+
         function openModalForCreate(dateStr) {
-            currentEditingEvent = null;
-            selectedDateStr = dateStr;
-            
+            isRecurringMode = false; currentEditingEvent = null; selectedDateStr = dateStr;
             document.getElementById('modalTitle').innerText = `📅 新增 ${dateStr} 行程`;
-            document.getElementById('holidayGroupContainer').style.display = 'block';
-            document.getElementById('modalDivider').style.display = 'block';
-            document.getElementById('modalHolidayCheckbox').checked = isDateHoliday(dateStr);
-            
-            document.getElementById('modalEventType').value = "course";
-            document.getElementById('modalCourseSelect').value = "國";
-            document.getElementById('modalActivityInput').value = "";
-            document.getElementById('modalUserSelect').value = "Sean";
-            document.getElementById('modalCustomUserInput').value = "";
-            document.getElementById('modalColorSelect').value = "clr-blue";
-            document.getElementById('modalStartTime').value = "14:00";
-            document.getElementById('modalEndTime').value = "15:30";
-            
-            toggleModalFields();
-            toggleCustomUserField();
-            
-            document.getElementById('modalDeleteBtn').style.display = 'none';
+            document.getElementById('holidayGroupContainer').style.display = 'block'; document.getElementById('modalDivider').style.display = 'block';
+            document.getElementById('recurDowGroup').style.display = 'none';
+            document.getElementById('modalDeleteBtn').style.display = 'none'; document.getElementById('modalDeleteSeriesBtn').style.display = 'none';
             document.getElementById('modalSaveBtn').innerText = "排入當日";
             document.getElementById('eventModal').style.display = 'flex';
         }
 
         function openModalForEdit(calEvent) {
-            currentEditingEvent = calEvent;
-            selectedDateStr = calEvent.startStr.split('T')[0];
-            const startTime = calEvent.startStr.split('T')[1].substring(0,5);
-            const endTime = calEvent.endStr ? calEvent.endStr.split('T')[1].substring(0,5) : startTime;
-
+            isRecurringMode = false; currentEditingEvent = calEvent;
+            const props = calEvent.extendedProps; selectedDateStr = calEvent.startStr.split('T')[0];
             document.getElementById('modalTitle').innerText = `✏️ 修改行程 (${selectedDateStr})`;
-            document.getElementById('holidayGroupContainer').style.display = 'none';
-            document.getElementById('modalDivider').style.display = 'none';
-
-            let fullTitle = calEvent.title;
-            const isCourse = ["國","英","數","社","自","琴","物","化"].some(c => fullTitle.startsWith(c));
-            document.getElementById('modalEventType').value = isCourse ? 'course' : 'activity';
-
-            let memo = "Sean";
-            if (fullTitle.includes('-')) {
-                const parts = fullTitle.split('-');
-                memo = parts[parts.length - 1];
-                fullTitle = fullTitle.substring(0, fullTitle.lastIndexOf('-'));
-            }
-
-            if (isCourse) {
-                document.getElementById('modalCourseSelect').value = fullTitle;
-            } else {
-                document.getElementById('modalActivityInput').value = fullTitle;
-            }
-
-            const userSelect = document.getElementById('modalUserSelect');
-            if (memo === 'Sean' || memo === 'Vivi') {
-                userSelect.value = memo;
-            } else {
-                userSelect.value = '其他';
-                document.getElementById('modalCustomUserInput').value = memo;
-            }
-
-            document.getElementById('modalColorSelect').value = calEvent.classNames[0] || "clr-blue";
-            document.getElementById('modalStartTime').value = startTime;
-            document.getElementById('modalEndTime').value = endTime;
-
-            toggleModalFields();
-            toggleCustomUserField();
-
+            document.getElementById('holidayGroupContainer').style.display = 'none'; document.getElementById('modalDivider').style.display = 'none'; document.getElementById('recurDowGroup').style.display = 'none';
+            
+            document.getElementById('modalIsAllDay').checked = calEvent.allDay;
+            document.getElementById('modalEventType').value = props.eventType || 'course';
+            document.getElementById('modalCourseSelect').value = props.courseSelect || '國';
+            document.getElementById('modalActivityInput').value = props.activityInput || '';
+            document.getElementById('modalUserSelect').value = props.userSelect || 'S';
+            document.getElementById('modalCustomUserInput').value = props.customUser || '';
+            document.getElementById('modalColorSelect').value = calEvent.classNames[0] || 'clr-blue';
+            document.getElementById('modalStartTime').value = props.startTime || '14:00';
+            document.getElementById('modalEndTime').value = props.endTime || '';
+            
+            toggleModalFields(); toggleCustomUserField(); toggleAllDayField();
             document.getElementById('modalDeleteBtn').style.display = 'block';
-            document.getElementById('modalSaveBtn').innerText = "儲存修改";
+            document.getElementById('modalSaveBtn').innerText = "儲存修改 (僅此日)";
+            document.getElementById('modalDeleteSeriesBtn').style.display = calEvent.groupId ? 'block' : 'none';
             document.getElementById('eventModal').style.display = 'flex';
         }
 
         function closeModal() { document.getElementById('eventModal').style.display = 'none'; }
-        
-        function toggleModalFields() {
-            const type = document.getElementById('modalEventType').value;
-            document.getElementById('modalCourseGroup').style.display = (type === 'course') ? 'block' : 'none';
-            document.getElementById('modalActivityGroup').style.display = (type === 'activity') ? 'block' : 'none';
-        }
-        
-        function toggleCustomUserField() {
-            const userVal = document.getElementById('modalUserSelect').value;
-            document.getElementById('customUserGroup').style.display = (userVal === '其他') ? 'block' : 'none';
-        }
-
-        function isDateHoliday(dateStr) {
-            if (holidayOverrides[dateStr] !== undefined) return holidayOverrides[dateStr];
-            const parts = dateStr.split('-');
-            const dayObj = new Date(parts[0], parts[1] - 1, parts[2]);
-            return (dayObj.getDay() === 0 || dayObj.getDay() === 6); 
-        }
-
-        function toggleHolidayFromModal() {
-            const isChecked = document.getElementById('modalHolidayCheckbox').checked;
-            const parts = selectedDateStr.split('-');
-            const dayObj = new Date(parts[0], parts[1] - 1, parts[2]);
-            const isDefaultHoliday = (dayObj.getDay() === 0 || dayObj.getDay() === 6);
-            if (isChecked === isDefaultHoliday) { delete holidayOverrides[selectedDateStr]; } 
-            else { holidayOverrides[selectedDateStr] = isChecked; }
-            localStorage.setItem(HOLIDAYS_KEY, JSON.stringify(holidayOverrides));
-            applyHolidayStyles();
-        }
-
-        function applyHolidayStyles() {
-            document.querySelectorAll('[data-date]').forEach(el => {
-                const dateStr = el.getAttribute('data-date');
-                if (!dateStr) return;
-                if (isDateHoliday(dateStr)) { el.classList.add('holiday-bg'); } else { el.classList.remove('holiday-bg'); }
-            });
-        }
 
         function saveEventFromModal() {
-            const type = document.getElementById('modalEventType').value;
-            const startTime = document.getElementById('modalStartTime').value;
-            const endTime = document.getElementById('modalEndTime').value;
-            const chosenColorClass = document.getElementById('modalColorSelect').value;
-            const userSelectVal = document.getElementById('modalUserSelect').value;
+            const type = document.getElementById('modalEventType').value; const isAllDay = document.getElementById('modalIsAllDay').checked;
+            const startTime = document.getElementById('modalStartTime').value; const endTime = document.getElementById('modalEndTime').value;
+            const chosenColorClass = document.getElementById('modalColorSelect').value; const userSelectVal = document.getElementById('modalUserSelect').value;
+            let memo = (userSelectVal === '其他') ? document.getElementById('modalCustomUserInput').value.trim() : userSelectVal;
+            if (memo === '') memo = '他';
+            if (!isAllDay && endTime !== "" && startTime >= endTime) { alert("開始時間不得晚於結束時間！"); return; }
+            let contentBody = (type === 'course') ? document.getElementById('modalCourseSelect').value : document.getElementById('modalActivityInput').value.trim().replace(/\s+/g, '');
+            if (!contentBody) { alert("請輸入活動內容！"); return; }
+            let finalTitle = isAllDay ? `${contentBody}-${memo}` : ((endTime === "") ? `${startTime}${contentBody}-${memo}` : `${startTime}-${endTime}${contentBody}-${memo}`);
             
-            let memo = userSelectVal;
-            if (userSelectVal === '其他') {
-                memo = document.getElementById('modalCustomUserInput').value.trim();
-                if (!memo) memo = '他';
-            }
-            if (startTime >= endTime) { alert("結束時間必須晚於開始時間！"); return; }
-            
-            let title = "";
-            if (type === 'course') { 
-                title = document.getElementById('modalCourseSelect').value; 
+            const metaProps = { eventType: type, courseSelect: document.getElementById('modalCourseSelect').value, activityInput: document.getElementById('modalActivityInput').value.trim(), userSelect: userSelectVal, customUser: document.getElementById('modalCustomUserInput').value.trim(), startTime: startTime, endTime: endTime };
+
+            if (isRecurringMode) {
+                const checkedBoxes = document.querySelectorAll('.recur-dow-checkbox:checked');
+                if (checkedBoxes.length === 0) { alert("請至少勾選一個星期！"); return; }
+                const targetDows = Array.from(checkedBoxes).map(cb => parseInt(cb.value));
+                const seriesGroupId = 'series_' + Date.now();
+                let d = new Date(); for (let i = 0; i < 365; i++) {
+                    if (targetDows.includes(d.getDay())) {
+                        const ds = d.toISOString().split('T')[0];
+                        calendar.addEvent({ title: finalTitle, className: chosenColorClass, allDay: isAllDay, groupId: seriesGroupId, extendedProps: metaProps, start: isAllDay ? ds : `${ds}T${startTime}:00`, end: (!isAllDay && endTime) ? `${ds}T${endTime}:00` : null });
+                    } d.setDate(d.getDate() + 1);
+                }
             } else {
-                const actName = document.getElementById('modalActivityInput').value.trim().replace(/\s+/g, '');
-                if (!actName) { alert("請輸入活動名稱！"); return; }
-                title = actName;
+                if (currentEditingEvent) currentEditingEvent.remove();
+                calendar.addEvent({ title: finalTitle, className: chosenColorClass, allDay: isAllDay, groupId: currentEditingEvent ? currentEditingEvent.groupId : null, extendedProps: metaProps, start: isAllDay ? selectedDateStr : `${selectedDateStr}T${startTime}:00`, end: (!isAllDay && endTime) ? `${selectedDateStr}T${endTime}:00` : null });
             }
-            title += `-${memo}`;
-
-            const eventData = {
-                title: title,
-                start: `${selectedDateStr}T${startTime}:00`,
-                end: `${selectedDateStr}T${endTime}:00`,
-                className: chosenColorClass
-            };
-
-            if (currentEditingEvent) { currentEditingEvent.remove(); }
-            
-            calendar.addEvent(eventData);
-            saveEventsToStorage();
-            closeModal();
+            saveEventsToStorage(); closeModal();
         }
 
         function deleteEventFromModal() {
-            if (currentEditingEvent && confirm(`是否要刪除這個行程？`)) {
-                currentEditingEvent.remove();
-                saveEventsToStorage();
-                closeModal();
+            if (currentEditingEvent) { currentEditingEvent.remove(); saveEventsToStorage(); closeModal(); }
+        }
+        function deleteSeriesFromModal() {
+            if (currentEditingEvent && currentEditingEvent.groupId && confirm("🚨 嚴重警告：確定要一次刪除「這一整年」的此系列所有行程嗎？\n\n不確定的話請點擊『取消』\n『取消』『取消』『取消』『取消』👇")) {
+                calendar.getEvents().forEach(evt => { if (evt.groupId === currentEditingEvent.groupId) evt.remove(); });
+                saveEventsToStorage(); closeModal();
             }
         }
-
-        function saveEventsToStorage() {
-            const events = calendar.getEvents().map(evt => ({
-                title: evt.title,
-                start: evt.startStr,
-                end: evt.endStr,
-                className: evt.classNames[0]
-            }));
-            localStorage.setItem(EVENTS_KEY, JSON.stringify(events));
-        }
-
-        function clearAllData() {
-            if (confirm("確定要清空所有行程與假日設定嗎？")) {
-                localStorage.removeItem(EVENTS_KEY);
-                localStorage.removeItem(HOLIDAYS_KEY);
-                location.reload();
-            }
-        }
+        function applyHolidayStyles() { document.querySelectorAll('[data-date]').forEach(el => { const ds = el.getAttribute('data-date'); if (ds && isDateHoliday(ds)) el.classList.add('holiday-bg'); else if (ds) el.classList.remove('holiday-bg'); }); }
+        function isDateHoliday(ds) { if (holidayOverrides[ds] !== undefined) return holidayOverrides[ds]; const p = ds.split('-'); const d = new Date(p[0], p[1]-1, p[2]); return (d.getDay() === 0 || d.getDay() === 6); }
+        function saveEventsToStorage() { localStorage.setItem(EVENTS_KEY, JSON.stringify(calendar.getEvents().map(e => ({ title: e.title, className: e.classNames[0], allDay: e.allDay, groupId: e.groupId, extendedProps: e.extendedProps, start: e.startStr, end: e.endStr })))); }
+        function clearAllData() { if (confirm("確定要清空所有行程與假日設定嗎?\n不確定的話點擊『取消』\n『取消』『取消』『取消』『取消』『取消』『取消』👇")) { localStorage.removeItem(EVENTS_KEY); localStorage.removeItem(HOLIDAYS_KEY); location.reload(); } }
     </script>
 </body>
 </html>
