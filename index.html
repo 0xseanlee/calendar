@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大格子互動月曆排程器 - 數值雙向同步版</title>
+    <title>大格子互動月曆排程器 - 數值雙向記憶版</title>
 
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -11,18 +11,13 @@
 
     <style>
         html, body { margin: 0; padding: 0; width: 100%; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f1f3f5; }
-        
         body { display: flex; flex-direction: column; box-sizing: border-box; padding: 20px; overflow-y: auto; overflow-x: hidden; }
-        
         .top-bar { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 12px 24px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); flex-shrink: 0; }
         .top-bar h2 { margin: 0; font-size: 18px; color: #333; }
         .top-bar-controls { display: flex; align-items: center; gap: 15px; }
 
-        /* 滑桿與數值輸入組 */
         .slider-group { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: bold; color: #495057; background: #f8f9fa; padding: 6px 12px; border-radius: 6px; border: 1px solid #dee2e6; }
         .slider-group input[type="range"] { cursor: pointer; width: 80px; }
-        
-        /* 🔢 新增的手動輸入框樣式 */
         .slider-group input[type="number"] { width: 55px; padding: 3px 5px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; font-weight: bold; text-align: center; color: #212529; }
         .slider-group input[type="number"]:focus { border-color: #339af0; outline: none; }
         .slider-group .unit { font-size: 12px; color: #868e96; margin-left: -4px; }
@@ -217,39 +212,45 @@
 
         const EVENTS_KEY = 'click_calendar_events_v7';
         const HOLIDAYS_KEY = 'click_calendar_holidays_v4';
+        // ✨ 新增記憶金鑰
+        const CONFIG_HEIGHT_KEY = 'click_calendar_user_height';
+        const CONFIG_FONT_KEY = 'click_calendar_user_font';
+
         let holidayOverrides = JSON.parse(localStorage.getItem(HOLIDAYS_KEY)) || {};
 
-        // 🌟 字體雙向同步邏輯
+        // 🌟 字體記憶同步邏輯
         function syncFontSize(val, source) {
             let num = parseInt(val);
             if (isNaN(num)) return;
             if (num < 10) num = 10;
             if (num > 20) num = 20;
 
-            // 讓滑桿與數字框彼此同步
             if (source === 'slider') document.getElementById('fontSizeNum').value = num;
             if (source === 'number') document.getElementById('fontSizeSlider').value = num;
 
-            // 套用樣式
             document.documentElement.style.setProperty('--event-font-size', num + 'px');
             const padding = num > 16 ? '4px 6px' : '2px 6px';
             document.querySelectorAll('.fc-event').forEach(el => el.style.padding = padding);
+            
+            // ✨ 存入媽媽的心血記憶
+            localStorage.setItem(CONFIG_FONT_KEY, num);
         }
 
-        // 🌟 高度雙向同步邏輯
+        // 🌟 高度記憶同步邏輯
         function syncCellHeight(val, source) {
             let num = parseInt(val);
             if (isNaN(num)) return;
             if (num < 10) num = 10;
             if (num > 350) num = 350;
 
-            // 讓滑桿與數字框彼此同步
             if (source === 'slider') document.getElementById('cellHeightNum').value = num;
             if (source === 'number') document.getElementById('cellHeightSlider').value = num;
 
-            // 套用樣式並通知日曆重繪
             document.documentElement.style.setProperty('--cell-height', num + 'px');
             if (calendar) calendar.updateSize(); 
+            
+            // ✨ 存入媽媽的心血記憶
+            localStorage.setItem(CONFIG_HEIGHT_KEY, num);
         }
 
         function highlightSelectedCell(dateStr) {
@@ -261,9 +262,15 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            // 初始化同步
-            syncFontSize(document.getElementById('fontSizeSlider').value, 'slider');
-            syncCellHeight(document.getElementById('cellHeightSlider').value, 'slider');
+            // ✨ 智慧記憶讀取：優先讀取媽媽上一次愛用的高度與字體，沒有才用預設 100 / 13
+            const savedHeight = localStorage.getItem(CONFIG_HEIGHT_KEY) || "100";
+            const savedFont = localStorage.getItem(CONFIG_FONT_KEY) || "13";
+
+            document.getElementById('cellHeightSlider').value = savedHeight;
+            document.getElementById('fontSizeSlider').value = savedFont;
+
+            syncFontSize(savedFont, 'slider');
+            syncCellHeight(savedHeight, 'slider');
             
             populateModalTimeSelects();
             const savedEvents = loadAndMigrateEvents();
@@ -333,7 +340,6 @@
                 calendar.updateSize();
 
                 await new Promise(r => setTimeout(r, 600));
-                
                 const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false, windowWidth: 1550, windowHeight: currentActualHeight });
 
                 element.classList.remove('hide-other-month');
@@ -489,7 +495,7 @@
         function applyHolidayStyles() { document.querySelectorAll('[data-date]').forEach(el => { const ds = el.getAttribute('data-date'); if (ds && isDateHoliday(ds)) el.classList.add('holiday-bg'); else if (ds) el.classList.remove('holiday-bg'); }); }
         function isDateHoliday(ds) { if (holidayOverrides[ds] !== undefined) return holidayOverrides[ds]; const p = ds.split('-'); const d = new Date(p[0], p[1]-1, p[2]); return (d.getDay() === 0 || d.getDay() === 6); }
         function saveEventsToStorage() { localStorage.setItem(EVENTS_KEY, JSON.stringify(calendar.getEvents().map(e => ({ title: e.title, className: e.classNames.join(' '), allDay: e.allDay, groupId: e.groupId, extendedProps: e.extendedProps, start: e.startStr, end: e.endStr })))); }
-        function clearAllData() { if (confirm("確定要清空所有行程與假日設定嗎?\n不確定的話點擊『取消』\n『取消』『取消』『取消』『取消』『取消』『取消』👇")) { localStorage.removeItem(EVENTS_KEY); localStorage.removeItem(HOLIDAYS_KEY); location.reload(); } }
+        function clearAllData() { if (confirm("確定要清空所有行程與假日設定嗎?\n不確定的話點擊『取消』\n『取消』『取消』『取消』『取消』『取消』『取消』👇")) { localStorage.removeItem(EVENTS_KEY); localStorage.removeItem(HOLIDAYS_KEY); localStorage.removeItem(CONFIG_HEIGHT_KEY); localStorage.removeItem(CONFIG_FONT_KEY); location.reload(); } }
     </script>
 </body>
 </html>
