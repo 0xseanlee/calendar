@@ -12,7 +12,7 @@
     <style>
         html, body { margin: 0; padding: 0; width: 100%; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f1f3f5; }
         body { display: flex; flex-direction: column; box-sizing: border-box; padding: 20px; overflow-y: auto; overflow-x: hidden; }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 12px 24px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); flex-shrink: 0; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 12px 24px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); flex-shrink: 0; }
         .top-bar h2 { margin: 0; font-size: 18px; color: #333; }
         .top-bar-controls { display: flex; align-items: center; gap: 15px; }
 
@@ -31,6 +31,8 @@
         .btn-import:hover { background: #1098ad; }
         .btn-recurring { background: #74c0fc; color: #ffffff; border: none; }
         .btn-recurring:hover { background: #4dabf7; }
+        .btn-png { background: #e8590c; border: none; color: white; transition: background 0.2s; } /* 🖼️ 新增 PNG 按鈕橘色樣式 */
+        .btn-png:hover { background: #d9480f; }
         .btn-print { background: #37b24d; border: none; color: white; transition: background 0.2s; }
         .btn-print:hover { background: #2b8a3e; }
         .btn-danger { background: #fff5f5; border: 1px solid #ffc9c9; color: #fa5252; }
@@ -95,18 +97,20 @@
         .btn-delete-series { background: #333333; color: white; width: 100%; display: none; }
         .btn-delete-series:hover { background: #111111; }
         .dow-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
-        
-        /* 🛠️ 新增調整：在 style 標籤結束前（第 88 行起），完美帶入你的外筐粗細規則 */
+        .dow-group label { display: flex; align-items: center; gap: 3px; font-size: 14px; font-weight: 500; cursor: pointer; background: #ffffff; padding: 4px 8px; border-radius: 4px; border: 1px solid #a5d8ff; }
+        .dow-group label:hover { background: #d0ebff; }
+
+        /* 🧱 格子形狀外筐線條粗細控制（在此處修改 2px、1px 或 3px 粗細） */
         .fc .fc-daygrid-day, 
         .fc .fc-scrollgrid-sync-table,
         .fc .fc-scrollgrid-section table {
-            border: 1px solid #333 !important; 
+            border: 2px solid #333 !important; 
         }
         .fc-daygrid-day {
             border: 1px solid #dee2e6 !important;
         }
         .fc-scrollgrid {
-            border: 2px solid #000 !important;
+            border: 3px solid #000 !important;
         }
     </style>
 </head>
@@ -135,7 +139,7 @@
                 <input type="file" id="hiddenFileInput" accept=".json" style="display: none;" onchange="importCalendarData(event)">
 
                 <button class="btn-recurring" onclick="openModalForRecurring()">🔁 每週固定設定</button>
-                <button class="btn-print" onclick="downloadPDF()">📥 下載 PDF</button>
+                <button class="btn-png" onclick="downloadPNG()">🖼️ 下載 PNG</button> <button class="btn-print" onclick="downloadPDF()">📥 下載 PDF</button>
                 <button class="btn-danger" onclick="clearAllData()">⚠️ 清空紀錄</button>
             </div>
         </div>
@@ -322,6 +326,48 @@
             } catch(err) { console.error(err); return []; }
         }
 
+        // 🖼️ 新增：一鍵下載純淨 PNG 圖片功能
+        async function downloadPNG() {
+            const element = document.getElementById('calendar-container');
+            const btn = document.querySelector('.btn-png');
+            btn.innerText = "⏳ 轉圖中..."; btn.disabled = true;
+            highlightSelectedCell(null);
+
+            const toolbarChunks = document.querySelectorAll('.fc-header-toolbar .fc-toolbar-chunk');
+            toolbarChunks.forEach(chunk => {
+                if (chunk.querySelector('.fc-prev-button') || chunk.querySelector('.fc-today-button') || chunk.querySelector('.fc-button-group')) {
+                    chunk.style.setProperty('display', 'none', 'important');
+                }
+            });
+
+            element.classList.add('hide-other-month');
+
+            try {
+                const originalStyle = element.style.cssText;
+                const currentActualHeight = element.offsetHeight;
+                element.style.cssText = `width: 1550px !important; height: ${currentActualHeight}px !important; position: fixed !important; top: 0 !important; left: 0 !important; z-index: -9999 !important; background: #ffffff !important; overflow: visible !important;`;
+                calendar.updateSize();
+
+                await new Promise(r => setTimeout(r, 600));
+                const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false, windowWidth: 1550, windowHeight: currentActualHeight });
+
+                element.classList.remove('hide-other-month');
+                element.style.cssText = originalStyle; calendar.updateSize();
+                toolbarChunks.forEach(chunk => chunk.style.removeProperty('display'));
+
+                // 轉為網址並一鍵觸發圖片下載
+                const imgData = canvas.toDataURL('image/png');
+                const downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", imgData);
+                downloadAnchor.setAttribute("download", `${document.querySelector('.fc-toolbar-title').innerText || '行事曆'}_寬版.png`);
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                downloadAnchor.remove();
+            } catch (error) {
+                console.error(error); alert("轉換 PNG 出現錯誤！");
+            } finally { btn.innerText = "🖼️ 下載 PNG"; btn.disabled = false; }
+        }
+
         async function downloadPDF() {
             const { jsPDF } = window.jspdf;
             const element = document.getElementById('calendar-container');
@@ -470,6 +516,7 @@
 
             if (isRecurringMode) {
                 const checkedBoxes = document.querySelectorAll('.recur-dow-checkbox:checked');
+                if (checkedBoxes.length === 0) { alert("請至少勾選一個星期！"); return; }
                 const targetDows = Array.from(checkedBoxes).map(cb => parseInt(cb.value));
                 const startRangeStr = document.getElementById('recurStartDate').value; const endRangeStr = document.getElementById('recurEndDate').value;
                 if (!startRangeStr || !endRangeStr) { alert("請填寫完整的開始與結束日期！"); return; }
